@@ -1,0 +1,407 @@
+{
+  "run_id": "42c001a5-0ae9-4cc9-a8f6-6353835ae99b",
+  "extraction_agent_id": "d2587363-375d-4e7a-9cfc-df80f517307a",
+  "data": {
+    "company_name": "MSIG Insurance (Singapore) Pte. Ltd.",
+    "company_registration_number": "200412212G",
+    "company_address": "4 Shenton Way, #21-01 SGX Centre 2, Singapore 068807",
+    "company_contact_number": "+65 6012 0516",
+    "company_website": "msig.com.sg",
+    "document_title": "Scootsurance Travel Insurance",
+    "document_reference": "QSR022206",
+    "non_applicable_to": null,
+    "endorsement_introduction": null,
+    "important_conditions": [
+      {
+        "condition_number": "1",
+        "description": "Your trip must begin in Singapore.",
+        "sub_conditions": null
+      },
+      {
+        "condition_number": "2",
+        "description": "At the time of arranging the trip or taking out this insurance, neither You nor any other insured person is aware of any circumstances which are likely to lead to a claim under the Policy.",
+        "sub_conditions": null
+      },
+      {
+        "condition_number": "3",
+        "description": "At the time You send us Your application for this insurance, none of the intended insured persons have already left Singapore on any trip meant to be covered by this insurance.",
+        "sub_conditions": null
+      },
+      {
+        "condition_number": "4",
+        "description": "Any insured child under the age of 12 years must be accompanied by a parent or adult guardian during the trip.",
+        "sub_conditions": null
+      },
+      {
+        "condition_number": "5",
+        "description": "If an insured person has ever been refused cover or had special terms placed on them by any insurer for travel insurance, they must declare this at the point of application and We must accept them, or there will be no cover for them.",
+        "sub_conditions": null
+      },
+      {
+        "condition_number": "6",
+        "description": "The insured persons are not travelling against the advice of a doctor or for the purpose of getting medical treatment.",
+        "sub_conditions": null
+      },
+      {
+        "condition_number": "7",
+        "description": "The insured persons must be in good health.",
+        "sub_conditions": null
+      }
+    ],
+    "sections_under_covid19_cover": {
+      "pre_trip_benefits": [
+        {
+          "section_number": "27",
+          "section_name": "Trip Cancellation due to COVID-19",
+          "description": "Covers irrecoverable, pre-paid and unutilised travel fare and accommodation charges if the trip is cancelled within 30 days prior due to COVID-19 diagnosis, required quarantine/isolation, or family member's COVID-19 related death or hospitalisation.",
+          "covered_reasons": null,
+          "notes": null
+        }
+      ],
+      "during_trip_benefits": [
+        {
+          "section_number": "26",
+          "section_name": "Medical expenses whilst overseas & Emergency Medical Evacuation and Repatriation due to COVID-19",
+          "description": "Cover for medical expenses incurred within 30 days from diagnosis of COVID-19 overseas and emergency medical evacuation or repatriation as determined necessary by the Medical Assistance Provider.",
+          "contact_details": null,
+          "covered_reasons": null,
+          "payment_conditions": null,
+          "what_is_not_covered": null,
+          "notes": null,
+          "covered_reason_tiers": null
+        },
+        {
+          "section_number": "28",
+          "section_name": "Trip Curtailment/Rearrangement due to COVID-19",
+          "description": "Covers irrecoverable, pre-paid, and unutilised travel fare and accommodation, or additional necessary accommodation/travel costs due to overseas COVID-19 diagnosis, required quarantine/isolation, or family member's COVID-19 related death or hospitalisation.",
+          "contact_details": null,
+          "covered_reasons": null,
+          "payment_conditions": null,
+          "what_is_not_covered": null,
+          "notes": null,
+          "covered_reason_tiers": null
+        },
+        {
+          "section_number": "29",
+          "section_name": "Overseas Hospitalisation Allowance due to COVID-19",
+          "description": "Pays a daily benefit for each day hospitalised overseas due to COVID-19.",
+          "contact_details": null,
+          "covered_reasons": null,
+          "payment_conditions": null,
+          "what_is_not_covered": null,
+          "notes": null,
+          "covered_reason_tiers": null
+        },
+        {
+          "section_number": "30",
+          "section_name": "Overseas Quarantine Allowance due to COVID-19",
+          "description": "Pays a daily benefit for each day subject to a government-imposed quarantine/isolation order overseas due to COVID-19 diagnosis.",
+          "contact_details": null,
+          "covered_reasons": null,
+          "payment_conditions": null,
+          "what_is_not_covered": null,
+          "notes": null,
+          "covered_reason_tiers": null
+        }
+      ],
+      "automatic_extension_of_cover": {
+        "section_number": "24",
+        "section_name": "Automatic extension of Policy period",
+        "description": "If unable to complete return trip within period of insurance due to COVID-19 hospitalisation or quarantine or public transport delays, cover is automatically extended.",
+        "extension_conditions": [
+          {
+            "condition_number": 1,
+            "duration": "up to 14 days",
+            "reason": "Hospitalised and/or compulsory quarantine due to COVID-19 infection while Overseas and certified unfit to travel by attending Doctor.",
+            "sub_reasons": null
+          },
+          {
+            "condition_number": 2,
+            "duration": "up to 7 days",
+            "reason": "Delayed confirmed Public Transport due to Strike, Riot or Civil Commotion, or aircraft grounding as a result of mechanical or structural defect.",
+            "sub_reasons": null
+          }
+        ],
+        "notes": [
+          "Automatic extension is without additional premium."
+        ]
+      },
+      "overseas_quarantine_daily_benefit": {
+        "description": "Pays a daily benefit for each day quarantined/isolation under government order due to COVID-19 diagnosis while overseas.",
+        "payment_conditions": [
+          "COVID-19 diagnosis and official quarantine/isolation order during overseas trip within insurance period."
+        ],
+        "what_is_not_covered": [
+          "Refer to General Exclusions and COVID-19 Cover Exclusions."
+        ]
+      }
+    },
+    "covid19_cover_conditions": [
+      {
+        "condition_number": 1,
+        "description": "You are not travelling to a country, specific area or event where the Singapore government has issued travel advisory against travel or to defer non-essential travel."
+      },
+      {
+        "condition_number": 2,
+        "description": "You are fully vaccinated against COVID-19 at policy inception and for the entire Period of Insurance, as defined by the Singapore government."
+      },
+      {
+        "condition_number": 3,
+        "description": "You must comply with all COVID-19 requirements and advice from Singapore and relevant overseas governments, transport and accommodation providers, including testing, quarantine, isolation, and control itineraries."
+      },
+      {
+        "condition_number": 4,
+        "description": "During the trip, you do not knowingly stay with anyone suspected/diagnosed with COVID-19 or in isolation/quarantine."
+      },
+      {
+        "condition_number": 5,
+        "description": "For claims under sections 26-30 (COVID-19), you/your representative must contact MSIG Assist immediately."
+      }
+    ],
+    "covid19_cover_exclusions": [
+      {
+        "exclusion_number": 1,
+        "description": "Changes to travel advisory or restrictions, travel arrangement, COVID-19 prevention measures issued by any government or authority relating to epidemic or pandemic at your planned destination or Singapore."
+      },
+      {
+        "exclusion_number": 2,
+        "description": "Any medical test, vaccination, quarantine, or isolation required by Singapore or overseas government, transport, or accommodation provider for the general public, to obtain approval to travel for the journey."
+      },
+      {
+        "exclusion_number": 3,
+        "description": "Medical expenses incurred in Singapore."
+      },
+      {
+        "exclusion_number": 4,
+        "description": "Vaccination, including side effects and complications resulting from vaccination."
+      },
+      {
+        "exclusion_number": 5,
+        "description": "Pre-existing medical condition and its complications, regardless of whether resulting from COVID-19 infection."
+      }
+    ],
+    "benefit_summaries": [
+      {
+        "applicable_to": "All insured travellers under Scootsurance (based on Schedule of Benefits, Return Trip or One-Way Trip)",
+        "summary_title": "COVID-19 Benefits and Key Coverages",
+        "currency": "Singapore dollars",
+        "pre_trip_benefits": [
+          {
+            "section_number": "27",
+            "section_name": "Trip Cancellation due to COVID-19",
+            "coverages": [
+              {
+                "coverage_type": "Insured person",
+                "standard_plan": "$1,000",
+                "elite_plan": "$1,000",
+                "premier_plan": "$1,000"
+              }
+            ]
+          }
+        ],
+        "during_trip_benefits": [
+          {
+            "section_number": "26",
+            "section_name": "Medical expenses whilst overseas & Emergency Medical Evacuation and Repatriation due to COVID-19",
+            "coverages": [
+              {
+                "coverage_type": "Insured person",
+                "standard_plan": "$70,000",
+                "elite_plan": "$70,000",
+                "premier_plan": "$70,000"
+              }
+            ]
+          },
+          {
+            "section_number": "28",
+            "section_name": "Trip Curtailment/Rearrangement due to COVID-19",
+            "coverages": [
+              {
+                "coverage_type": "Insured person",
+                "standard_plan": "$1,000",
+                "elite_plan": "$1,000",
+                "premier_plan": "$1,000"
+              }
+            ]
+          },
+          {
+            "section_number": "29",
+            "section_name": "Overseas Hospitalisation Allowance due to COVID-19",
+            "coverages": [
+              {
+                "coverage_type": "Insured person",
+                "standard_plan": "$50 per day (max $1,000)",
+                "elite_plan": "$50 per day (max $1,000)",
+                "premier_plan": "$50 per day (max $1,000)"
+              }
+            ]
+          },
+          {
+            "section_number": "30",
+            "section_name": "Overseas Quarantine Allowance due to COVID-19",
+            "coverages": [
+              {
+                "coverage_type": "Insured person",
+                "standard_plan": "$100 per day (max $1,000)",
+                "elite_plan": "$100 per day (max $1,000)",
+                "premier_plan": "$100 per day (max $1,000)"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "policy_introduction": "This group travel insurance (Scootsurance) is issued to the benefit of customers of Scoot under Master Policy No: 870000001. Insured persons may claim directly against MSIG within terms and policy conditions.",
+    "important_notice": null,
+    "how_insurance_operates": "Insurance coverage applies provided that the application and premium payment have been made, and the policy terms, conditions and exclusions are met.",
+    "promise_of_service": "MSIG commits to providing a high standard of service and to meeting claims honestly, fairly, and promptly. Customers are encouraged to contact MSIG directly with any concerns.",
+    "policy_guide": [
+      
+    ],
+    "general_important_conditions": null,
+    "definitions": [
+      {
+        "term": "Accident or Accidental",
+        "definition": "A sudden and unforeseen event that solely and independently results in either Injury, disablement or death not caused by any Illness or medical condition; or loss of or damage to property.",
+        "sub_definitions": null
+      },
+      {
+        "term": "COVID-19",
+        "definition": "Refers to: (a) Coronavirus disease (COVID-19); (b) Severe acute respiratory syndrome coronavirus 2 (SARS-CoV-2); or (c) any mutation or variation of SARS-CoV-2 or COVID-19.",
+        "sub_definitions": null
+      },
+      {
+        "term": "Sum Insured",
+        "definition": "The maximum limit that the relevant Section will pay as shown.",
+        "sub_definitions": null
+      },
+      {
+        "term": "Period of Insurance",
+        "definition": "The period during which cover under this Policy is effective, as specified in the Certificate of Insurance.",
+        "sub_definitions": null
+      }
+    ],
+    "benefits": [
+      {
+        "section_number": "26",
+        "section_name": "Medical expenses whilst overseas & Emergency Medical Evacuation and Repatriation due to COVID-19",
+        "description": "Covers medical expenses incurred within 30 days from date of COVID-19 diagnosis, and emergency medical evacuation or repatriation as required by the situation.",
+        "table_of_compensation": null,
+        "notes": null,
+        "maximum_payouts": [
+          {
+            "coverage_type": "Insured person",
+            "premier_plan": "$70,000",
+            "elite_plan": "$70,000",
+            "standard_plan": "$70,000"
+          }
+        ],
+        "what_is_not_covered": [
+          "Expenses for services not approved by the Medical Assistance Provider.",
+          "Expenses for services already included in the cost of the trip.",
+          "Medical expenses in Singapore.",
+          "Vaccination, including related side effects.",
+          "Pre-existing conditions and complications, even if resulting from COVID-19."
+        ],
+        "terms_and_limits_apply": null,
+        "services_available": null
+      },
+      {
+        "section_number": "27",
+        "section_name": "Trip Cancellation due to COVID-19",
+        "description": "Covers irrecoverable, pre-paid and unutilised charges for travel fare and accommodation (if trip is cancelled within 30 days prior to departure for specified COVID-19 reasons).",
+        "table_of_compensation": null,
+        "notes": null,
+        "maximum_payouts": [
+          {
+            "coverage_type": "Insured person",
+            "premier_plan": "$1,000",
+            "elite_plan": "$1,000",
+            "standard_plan": "$1,000"
+          }
+        ],
+        "what_is_not_covered": [
+          "Loss of vouchers, reward points or holiday points.",
+          "Policies purchased less than 3 days before the trip.",
+          "Known circumstances that could lead to cancellation.",
+          "Recoverable costs from providers or credit/debit card.",
+          "Claims not arising from specified reasons."
+        ],
+        "terms_and_limits_apply": null,
+        "services_available": null
+      },
+      {
+        "section_number": "28",
+        "section_name": "Trip Curtailment/Rearrangement due to COVID-19",
+        "description": "Covers irrecoverable, pre-paid and unutilised charges for travel fare and accommodation, or additional necessary accommodation and travel costs, resulting from trip curtailment or rearrangement due to COVID-19 circumstances.",
+        "table_of_compensation": null,
+        "notes": null,
+        "maximum_payouts": [
+          {
+            "coverage_type": "Insured person",
+            "premier_plan": "$1,000",
+            "elite_plan": "$1,000",
+            "standard_plan": "$1,000"
+          }
+        ],
+        "what_is_not_covered": [
+          "Loss of vouchers, reward points or holiday points.",
+          "Costs recoverable from providers or credit/debit card.",
+          "Claims not arising from specified reasons."
+        ],
+        "terms_and_limits_apply": null,
+        "services_available": null
+      },
+      {
+        "section_number": "29",
+        "section_name": "Overseas Hospitalisation Allowance due to COVID-19",
+        "description": "Pays $50 per day, up to maximum $1,000, for each day of Hospitalisation overseas due to COVID-19.",
+        "table_of_compensation": null,
+        "notes": null,
+        "maximum_payouts": [
+          {
+            "coverage_type": "Insured person",
+            "premier_plan": "$50 per day (max $1,000)",
+            "elite_plan": "$50 per day (max $1,000)",
+            "standard_plan": "$50 per day (max $1,000)"
+          }
+        ],
+        "what_is_not_covered": [
+          "Refer General Exclusions and COVID-19 Cover Exclusions."
+        ],
+        "terms_and_limits_apply": null,
+        "services_available": null
+      },
+      {
+        "section_number": "30",
+        "section_name": "Overseas Quarantine Allowance due to COVID-19",
+        "description": "Pays $100 per day, up to maximum $1,000, for each day of official quarantine/isolation ordered due to COVID-19 diagnosis overseas.",
+        "table_of_compensation": null,
+        "notes": null,
+        "maximum_payouts": [
+          {
+            "coverage_type": "Insured person",
+            "premier_plan": "$100 per day (max $1,000)",
+            "elite_plan": "$100 per day (max $1,000)",
+            "standard_plan": "$100 per day (max $1,000)"
+          }
+        ],
+        "what_is_not_covered": [
+          "Refer General Exclusions and COVID-19 Cover Exclusions."
+        ],
+        "terms_and_limits_apply": null,
+        "services_available": null
+      }
+    ]
+  },
+  "extraction_metadata": {
+    "field_metadata": {
+      
+    },
+    "usage": {
+      "num_pages_extracted": 28,
+      "num_document_tokens": 22745,
+      "num_output_tokens": 3810
+    }
+  }
+}
