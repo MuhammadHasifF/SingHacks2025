@@ -1,0 +1,11 @@
+﻿streamlit
+fastapi
+uvicorn[standard]
+langchain
+llama-index
+chromadb
+pydantic
+pillow
+pytesseract
+requests
+python-dotenv
