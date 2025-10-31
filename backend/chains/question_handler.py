@@ -1,54 +1,46 @@
 """
 backend/chains/question_handler.py
 -----------------------------------
-Detects question intent and routes it to the correct function.
+Routes user queries to correct logic (comparison, explanation, eligibility, scenario).
 """
 
-import re
-from backend.chains.policy_comparator import compare_policies
+from backend.chains.policy_comparator import (
+    load_all_policies,
+    compare_policies,
+    explain_section,
+    check_eligibility,
+    scenario_coverage
+)
 
-
-def detect_intent(question: str) -> str:
-    """
-    Very basic intent detection based on keywords.
-
-    Returns:
-        "comparison" | "explanation" | "eligibility" | "scenario" | "general"
-    """
+def handle_question(question: str) -> str:
     q = question.lower()
+    policies = load_all_policies()
+    travel = policies["TravelEasy Policy QTD032212"]
+    scoot = policies["Scootsurance QSR022206"]
 
-    if any(x in q for x in ["compare", "better", "vs", "difference"]):
-        return "comparison"
-    elif any(x in q for x in ["mean", "explain", "definition", "what is"]):
-        return "explanation"
-    elif any(x in q for x in ["covered", "cover", "eligibility", "pre-existing"]):
-        return "eligibility"
-    elif any(x in q for x in ["if i", "scenario", "situation", "accident", "break my"]):
-        return "scenario"
-    else:
-        return "general"
-
-
-def handle_question(question: str, plans_data: dict) -> str:
-    """
-    Routes question to specific function depending on detected intent.
-    """
-
-    intent = detect_intent(question)
-
-    if intent == "comparison":
-        # crude example: try to detect category
-        if "medical" in question.lower():
-            return compare_policies(plans_data["A"], plans_data["B"], "medical_coverage")
-        elif "trip" in question.lower():
-            return compare_policies(plans_data["A"], plans_data["B"], "trip_cancellation")
+    if any(k in q for k in ["compare", "better", "vs", "difference"]):
+        # Comparison logic
+        if "medical" in q:
+            return compare_policies(travel, scoot, "Trip Cancellation due to COVID-19")
+        elif "trip" in q or "cancel" in q:
+            return compare_policies(travel, scoot, "Trip Cancellation due to COVID-19")
         else:
-            return "Can you clarify what you want to compare?"
-    elif intent == "explanation":
-        return f"{question.capitalize()} usually refers to how an insurance policy defines and applies the relevant coverage or benefit."
-    elif intent == "eligibility":
-        return "Eligibility depends on pre-existing condition exclusions and age limits; please refer to the policy terms."
-    elif intent == "scenario":
-        return "Let’s check your scenario: coverage depends on trip purpose, country, and benefit limits."
+            return "🤔 I can compare benefits like medical coverage or trip cancellation — which one?"
+
+    elif any(k in q for k in ["mean", "explain", "what is"]):
+        # Explanation
+        if "trip" in q or "cancel" in q:
+            return explain_section(scoot, "Trip Cancellation due to COVID-19")
+        else:
+            return explain_section(travel, "Overseas medical expenses")
+
+    elif any(k in q for k in ["cover", "covered", "eligibility", "pre-existing"]):
+        # Eligibility
+        return check_eligibility(travel, "pre-existing")
+
+    elif any(k in q for k in ["if i", "scenario", "accident", "broke my", "ski"]):
+        # Scenario
+        return scenario_coverage(travel, q)
+
     else:
-        return "I can help you compare, explain, or check eligibility — try asking about a specific benefit."
+        return "💬 I can compare plans, explain benefits, or check coverage. Try asking about 'trip cancellation' or 'medical coverage'."

@@ -1,11 +1,6 @@
 """
 LangChain (1.x) conversational agent using Groq + RunnableWithMessageHistory.
-Integrated with Hasif's logic modules for:
- - Policy comparison
- - Explanation
- - Eligibility
- - Scenario analysis
- - Citations
+Strictly grounded to real insurance data (MSIG TravelEasy, Pre-Ex, Scootsurance).
 """
 
 import os
@@ -17,55 +12,62 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.chat_history import InMemoryChatMessageHistory
 from langchain_core.runnables import RunnableWithMessageHistory
 
-# Import Hasif Logic Modules 🧠
+# 🧠 Import Hasif Logic Modules
 from backend.chains.question_handler import handle_question
-from backend.chains.citation_helper import add_citations
+from backend.chains.citation_helper import add_citation
 
 load_dotenv()
 
 
 def create_insurance_agent():
     """
-    Build a chat agent that:
-      ✅ Uses Groq (via LangChain)
-      ✅ Keeps per-session chat history
-      ✅ Routes user intent (comparison, explanation, eligibility, scenario)
-      ✅ Adds policy citations
-    Returns:
-      ask(session_id: str, user_msg: str) -> str
+    Travel Insurance Chat Agent:
+      ✅ Uses Groq (LangChain)
+      ✅ Keeps per-session memory
+      ✅ Handles comparison, explanation, eligibility, scenarios
+      ✅ Cites real policy sources
+      🚫 Never references non-MSISG / Scootsurance products
     """
 
     # 1️⃣ Initialize Groq LLM
     llm = ChatGroq(
         model="llama-3.3-70b-versatile",
-        temperature=0.3,
+        temperature=0.2,
         groq_api_key=os.getenv("GROQ_API_KEY"),
     )
 
-    # 2️⃣ Define prompt template (with memory placeholder)
+    # 2️⃣ Define a strict prompt
+    system_prompt = (
+        "You are **Insurance Scammer**, an MSIG x Scootsurance insurance expert. "
+        "Your only knowledge sources are the following three policies:\n"
+        "- TravelEasy Policy QTD032212\n"
+        "- TravelEasy Pre-Ex Policy QTD032212-PX\n"
+        "- Scootsurance QSR022206\n\n"
+        "❗ You must never mention or recommend other insurance brands or providers. "
+        "When comparing or explaining, always base your response strictly on these documents. "
+        "If a user asks for a suggestion, describe which of these 3 plans best fits their need. "
+        "Be clear, factual, and concise."
+    )
+
     prompt = ChatPromptTemplate.from_messages(
         [
-            ("system",
-             "You are JazzBot, a friendly, accurate travel insurance assistant. "
-             "Use real policy logic when available, be concise, and always provide factual, cited answers."),
+            ("system", system_prompt),
             MessagesPlaceholder(variable_name="history"),
             ("human", "{question}"),
         ]
     )
 
-    # 3️⃣ Chain together the prompt → LLM → output parser
+    # 3️⃣ Build the LangChain pipeline
     chain = prompt | llm | StrOutputParser()
 
-    # 4️⃣ In-memory chat store per user/session
+    # 4️⃣ Memory setup
     store: dict[str, InMemoryChatMessageHistory] = {}
 
     def _get_history(session_id: str) -> InMemoryChatMessageHistory:
-        """Retrieve or create chat history per user session."""
         if session_id not in store:
             store[session_id] = InMemoryChatMessageHistory()
         return store[session_id]
 
-    # 5️⃣ Wrap with message history (LangChain 1.x pattern)
     chat = RunnableWithMessageHistory(
         chain,
         lambda session_id: _get_history(session_id),
@@ -73,39 +75,34 @@ def create_insurance_agent():
         history_messages_key="history",
     )
 
-    # 6️⃣ Define sample structured data for comparisons
-    policies = {
-        "A": {"medical_coverage": 100000, "trip_cancellation": 5000},
-        "B": {"medical_coverage": 75000, "trip_cancellation": 2000},
-    }
-
-    # 7️⃣ Core function
+    # 5️⃣ Main function
     def ask(session_id: str, question: str) -> str:
         """
-        Process a user question, applying logic + memory + citations.
+        Handles:
+          - Intent routing via Hasif's backend logic
+          - LLM phrasing (strictly grounded to JSON)
+          - Adds citations
         """
+        # Step 1 — Route question through logic
+        routed_answer = handle_question(question)
 
-        # Step 1: Hasif logic (intent-based reasoning)
-        routed_answer = handle_question(question, policies)
-
-        # Step 2: Ask the Groq model, with routed logic as context
+        # Step 2 — Feed both question + routed logic to Groq
         ai_response = chat.invoke(
             {
                 "question": (
                     f"User asked: {question}\n"
-                    f"Assistant reasoning: {routed_answer}\n"
-                    "Please summarize or expand this as a helpful insurance assistant."
+                    f"Assistant reasoning (from JSON policies): {routed_answer}\n"
+                    "Generate a clear response using ONLY these policies. "
+                    "If unsure, say 'This information is not specified in the current policy data.'"
                 )
             },
             config={"configurable": {"session_id": session_id}},
         )
 
-        # Step 3: Attach citations
-        final_response = add_citations(
+        # Step 3 — Add citation footer
+        return add_citation(
             ai_response,
-            [{"text": "Policy Wordings Section 4.2 - Medical Benefits", "source": "MSIG_TravelPlus.pdf"}],
+            "MSIG TravelEasy / Pre-Ex / Scootsurance Official Policy Wordings (2025)",
         )
-
-        return final_response
 
     return ask
