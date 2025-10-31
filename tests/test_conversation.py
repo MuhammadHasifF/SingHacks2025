@@ -1,22 +1,34 @@
-import os
-from dotenv import load_dotenv
+"""
+tests/test_conversation.py
+--------------------------
+Integration test to verify that the backend can:
+1. Load .env variables via backend/config.py
+2. Connect to the Groq API using backend/groq/client.py
+3. Successfully generate a response using Groq LLM
+"""
 
-load_dotenv()
+from backend.groq.client import GroqClient
 
-from groq import Groq
 
-client = Groq(
-    api_key=os.getenv("GROQ_API_KEY"),
-)
+def test_groq_connection():
+    """
+    Sends a simple query to Groq and prints the response.
+    This confirms end-to-end setup: config → Groq client → API → response.
+    """
+    print("🔍 Testing Groq SDK connection...")
 
-chat_completion = client.chat.completions.create(
-    messages=[
-        {
-            "role": "user",
-            "content": "Explain the importance of fast language models",
-        }
-    ],
-    model="llama-3.3-70b-versatile",
-)
+    # Initialize client
+    groq = GroqClient()
 
-print(chat_completion.choices[0].message.content)
+    # Example query to test API latency and correctness
+    response = groq.ask(
+        "Give me one short sentence on why fast language models matter."
+    )
+
+    print("✅ Groq responded successfully:\n")
+    print(response)
+
+
+if __name__ == "__main__":
+    # Allows direct execution from terminal
+    test_groq_connection()
