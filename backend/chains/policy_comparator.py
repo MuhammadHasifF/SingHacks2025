@@ -1,35 +1,66 @@
 """
 backend/chains/policy_comparator.py
 -----------------------------------
-Compare insurance policy data such as medical, cancellation, and coverage amounts.
+Compares real insurance plan JSONs from /data/processed/.
 """
 
-from typing import Dict, Any
+import os, json
+
+DATA_PATH = "data/processed"
+
+def load_all_policies() -> dict:
+    """Load all available policy JSONs."""
+    policies = {}
+    for fname in os.listdir(DATA_PATH):
+        if fname.endswith(".json"):
+            with open(os.path.join(DATA_PATH, fname), "r") as f:
+                data = json.load(f)
+                plan_name = data.get("plan_name", fname.replace(".json", ""))
+                policies[plan_name] = data
+    return policies
 
 
-def compare_policies(plan_a: Dict[str, Any], plan_b: Dict[str, Any], category: str) -> str:
-    """
-    Compare two plans within a specific coverage category (e.g., 'medical_coverage').
+def summarize_policy(plan: dict) -> str:
+    """Summarize a policy’s benefits for debugging or quick view."""
+    if not plan:
+        return "❌ Policy not found."
+    benefits = plan.get("data", {}).get("benefits", [])
+    lines = []
+    for b in benefits[:5]:  # just show first few
+        lines.append(f"- {b.get('section_name')}")
+    return f"✅ {plan.get('plan_name', 'Unnamed')} includes:\n" + "\n".join(lines)
 
-    Args:
-        plan_a: Dict containing key-value policy data for Plan A.
-        plan_b: Dict containing key-value policy data for Plan B.
-        category: The coverage field to compare (e.g., 'medical_coverage').
 
-    Returns:
-        str: Human-readable comparison summary.
-    """
+def compare_policies(policy_a: dict, policy_b: dict, benefit_name: str) -> str:
+    """Compare two policies for a specific benefit section."""
+    a_sections = {b["section_name"].lower(): b for b in policy_a["data"]["benefits"]}
+    b_sections = {b["section_name"].lower(): b for b in policy_b["data"]["benefits"]}
 
-    a_val = plan_a.get(category, "N/A")
-    b_val = plan_b.get(category, "N/A")
+    benefit = benefit_name.lower()
+    a_benefit = a_sections.get(benefit)
+    b_benefit = b_sections.get(benefit)
 
-    if a_val == "N/A" or b_val == "N/A":
-        return f"I couldn’t find comparable data for {category}."
+    if not a_benefit or not b_benefit:
+        return f"❌ Couldn’t find '{benefit_name}' in one or both policies."
 
-    # Example: numerical or qualitative comparison
-    if isinstance(a_val, (int, float)) and isinstance(b_val, (int, float)):
-        better = "A" if a_val > b_val else "B"
-        diff = abs(a_val - b_val)
-        return f"Plan {better} offers higher {category.replace('_', ' ')} coverage (difference: {diff:,})."
-    else:
-        return f"Plan A: {a_val} vs Plan B: {b_val} for {category.replace('_', ' ')}."
+    result = f"### Comparison for {benefit_name}\n\n"
+    result += f"**{policy_a['plan_name']}**: {a_benefit.get('description', '')}\n"
+    result += f"**{policy_b['plan_name']}**: {b_benefit.get('description', '')}\n"
+
+    # Add payout table info if available
+    if "maximum_payouts" in a_benefit:
+        result += "\n\n**Maximum Payouts (Plan A)**:\n"
+        for payout in a_benefit["maximum_payouts"]:
+            result += f"- {payout.get('coverage_type')}: {payout.get('standard_plan', 'N/A')}\n"
+    if "maximum_payouts" in b_benefit:
+        result += "\n\n**Maximum Payouts (Plan B)**:\n"
+        for payout in b_benefit["maximum_payouts"]:
+            result += f"- {payout.get('coverage_type')}: {payout.get('standard_plan', 'N/A')}\n"
+
+    return result
+
+
+if __name__ == "__main__":
+    all_policies = load_all_policies()
+    for name, policy in all_policies.items():
+        print(summarize_policy(policy))
