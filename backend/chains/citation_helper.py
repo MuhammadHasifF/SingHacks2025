@@ -1,31 +1,30 @@
 """
 backend/chains/citation_helper.py
 ---------------------------------
-Adds reference citations (from PDFs or Chroma metadata)
-to chatbot responses for transparency.
+Handles attaching source citations or links to responses.
 """
 
-def add_citations(answer: str, sources: list) -> str:
+from typing import List, Dict
+
+
+def add_citations(response: str, sources: List[Dict[str, str]]) -> str:
     """
-    Append citation information to an AI answer.
+    Adds citation references to an AI response.
 
-    Parameters
-    ----------
-    answer : str
-        AI-generated text.
-    sources : list
-        List of dicts with 'filename', 'page', and 'snippet'.
+    Args:
+        response: Model-generated text.
+        sources: List of dicts with {"text": ..., "source": ...}.
 
-    Returns
-    -------
-    str
-        Answer text with formatted citations appended.
+    Returns:
+        str: Response text with appended citation lines.
     """
     if not sources:
-        return answer
+        return response
 
-    citation_text = "\n\n📚 **References:**\n"
-    for src in sources:
-        citation_text += f"- {src.get('filename', 'Unknown File')} (Page {src.get('page', '?')}): “{src.get('snippet', '')}”\n"
+    citations = "\n\n📚 Sources:\n"
+    for s in sources:
+        text = s.get("text", "")
+        src = s.get("source", "")
+        citations += f" - {src}: \"{text[:60]}...\"\n"
 
-    return answer + citation_text
+    return response + citations
