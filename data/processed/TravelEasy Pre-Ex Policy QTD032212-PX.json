@@ -1,0 +1,540 @@
+{
+  "run_id": "79ee2e3d-8cbc-4ae8-8c2f-4ffc7f19ee07",
+  "extraction_agent_id": "d2587363-375d-4e7a-9cfc-df80f517307a",
+  "data": {
+    "company_name": "MSIG Insurance (Singapore) Pte. Ltd.",
+    "company_registration_number": "200412212G",
+    "company_address": "4 Shenton Way, #21-01, SGX Centre 2, Singapore 068807",
+    "company_contact_number": "+65 6827 7888",
+    "company_website": "msig.com.sg",
+    "document_title": "TRAVELEASY\u0000/TRAVELEASY\u0000 PRE-EX INSURANCE POLICY",
+    "document_reference": null,
+    "non_applicable_to": null,
+    "endorsement_introduction": null,
+    "important_conditions": null,
+    "sections_under_covid19_cover": null,
+    "covid19_cover_conditions": null,
+    "covid19_cover_exclusions": null,
+    "benefit_summaries": [
+      {
+        "applicable_to": "TravelEasy® policyholder",
+        "summary_title": "TravelEasy® Benefits Summary",
+        "currency": "Singapore Dollars",
+        "pre_trip_benefits": [
+          {
+            "section_number": "21",
+            "section_name": "Travel cancellation",
+            "coverages": [
+              {
+                "coverage_type": "Individual cover (in total)",
+                "standard_plan": "$5,000",
+                "elite_plan": "$10,000",
+                "premier_plan": "$15,000"
+              },
+              {
+                "coverage_type": "Family cover (in total)",
+                "standard_plan": "$12,500",
+                "elite_plan": "$25,000",
+                "premier_plan": "$37,500"
+              }
+            ]
+          },
+          {
+            "section_number": "22",
+            "section_name": "Travel postponement",
+            "coverages": [
+              {
+                "coverage_type": "Individual cover (in total)",
+                "standard_plan": "$750",
+                "elite_plan": "$1,500",
+                "premier_plan": "$2,000"
+              },
+              {
+                "coverage_type": "Family cover (in total)",
+                "standard_plan": "$1,875",
+                "elite_plan": "$3,750",
+                "premier_plan": "$5,000"
+              }
+            ]
+          },
+          {
+            "section_number": "23",
+            "section_name": "Replacement of traveller",
+            "coverages": [
+              {
+                "coverage_type": "Individual cover (in total)",
+                "standard_plan": "$500",
+                "elite_plan": "$750",
+                "premier_plan": "$1,000"
+              },
+              {
+                "coverage_type": "Family cover (in total)",
+                "standard_plan": "$1,250",
+                "elite_plan": "$1,875",
+                "premier_plan": "$2,500"
+              }
+            ]
+          },
+          {
+            "section_number": "24",
+            "section_name": "Replacement of employee",
+            "coverages": [
+              {
+                "coverage_type": "Individual cover (in total)",
+                "standard_plan": "$5,000",
+                "elite_plan": "$10,000",
+                "premier_plan": "$15,000"
+              }
+            ]
+          }
+        ],
+        "during_trip_benefits": [
+          {
+            "section_number": "6",
+            "section_name": "Overseas medical expenses",
+            "coverages": [
+              {
+                "coverage_type": "Adult below 70 years",
+                "standard_plan": "$250,000",
+                "elite_plan": "$500,000",
+                "premier_plan": "$1,000,000"
+              },
+              {
+                "coverage_type": "Adult 70 years & above",
+                "standard_plan": "$50,000",
+                "elite_plan": "$75,000",
+                "premier_plan": "$100,000"
+              },
+              {
+                "coverage_type": "Child",
+                "standard_plan": "$150,000",
+                "elite_plan": "$200,000",
+                "premier_plan": "$300,000"
+              }
+            ]
+          },
+          {
+            "section_number": "7",
+            "section_name": "Emergency dental expenses",
+            "coverages": [
+              {
+                "coverage_type": "Adult",
+                "standard_plan": "$5,000",
+                "elite_plan": "$10,000",
+                "premier_plan": "$15,000"
+              },
+              {
+                "coverage_type": "Child",
+                "standard_plan": "$1,250",
+                "elite_plan": "$2,500",
+                "premier_plan": "$3,750"
+              }
+            ]
+          },
+          {
+            "section_number": "8",
+            "section_name": "Medical expenses in Singapore",
+            "coverages": [
+              {
+                "coverage_type": "Adult below 70 years",
+                "standard_plan": "$25,000",
+                "elite_plan": "$50,000",
+                "premier_plan": "$75,000"
+              },
+              {
+                "coverage_type": "Adult 70 years & above",
+                "standard_plan": "$5,000",
+                "elite_plan": "$7,500",
+                "premier_plan": "$10,000"
+              },
+              {
+                "coverage_type": "Child",
+                "standard_plan": "$10,000",
+                "elite_plan": "$20,000",
+                "premier_plan": "$30,000"
+              }
+            ]
+          },
+          {
+            "section_number": "9",
+            "section_name": "Mobility aid reimbursement",
+            "coverages": [
+              {
+                "coverage_type": "Adult",
+                "standard_plan": "$1,000",
+                "elite_plan": "$3,000",
+                "premier_plan": "$5,000"
+              },
+              {
+                "coverage_type": "Child",
+                "standard_plan": "$250",
+                "elite_plan": "$750",
+                "premier_plan": "$1,250"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "policy_introduction": null,
+    "important_notice": "The insurance cover provided under this policy is based on the information given by the insured. The insured must disclose all facts they know or ought to know to maintain coverage under the policy.",
+    "how_insurance_operates": "The policy is a contract between the insurer and the insured person named in the schedule. The application form, declaration, and any information given during application form the basis of the contract. In return for paying the premium, the insurer provides insurance cover as described in the policy during the insurance period or any subsequent period for which the premium is paid and accepted.",
+    "promise_of_service": "The company commits to providing a high standard of service and to meeting any claims covered by the policy honestly, fairly, and promptly. They encourage customers to contact their agent, broker, or the company directly if they believe this commitment has not been met, and they express readiness to assist with any concerns.",
+    "policy_guide": [
+      {
+        "section_title": "The benefits",
+        "section_number": null,
+        "description": "Covers various benefits including Accidental death and permanent total disability, Public transport double cover, Funeral expenses due to an accident, Child education grant, Family assistance benefit, Overseas medical expenses, Emergency dental expenses, Medical expenses in Singapore, Mobility aid reimbursement, Traditional Chinese medicine expenses, Maternity medical expenses overseas, Overseas hospitalisation daily benefit, Overseas ICU hospitalisation daily benefit, and Hospitalisation daily benefit in Singapore.",
+        "page_number": 8,
+        "sub_sections": [
+          {
+            "section_number": "1",
+            "section_name": "Accidental death and permanent total disability",
+            "page_number": 8
+          },
+          {
+            "section_number": "2",
+            "section_name": "Public transport double cover",
+            "page_number": 8
+          },
+          {
+            "section_number": "3",
+            "section_name": "Funeral expenses due to an accident",
+            "page_number": 9
+          },
+          {
+            "section_number": "4",
+            "section_name": "Child education grant",
+            "page_number": 9
+          },
+          {
+            "section_number": "5",
+            "section_name": "Family assistance benefit",
+            "page_number": 10
+          },
+          {
+            "section_number": "6",
+            "section_name": "Overseas medical expenses",
+            "page_number": 10
+          },
+          {
+            "section_number": "7",
+            "section_name": "Emergency dental expenses",
+            "page_number": 10
+          },
+          {
+            "section_number": "8",
+            "section_name": "Medical expenses in Singapore",
+            "page_number": 11
+          },
+          {
+            "section_number": "9",
+            "section_name": "Mobility aid reimbursement",
+            "page_number": 11
+          },
+          {
+            "section_number": "10",
+            "section_name": "Traditional Chinese medicine expenses",
+            "page_number": 12
+          },
+          {
+            "section_number": "11",
+            "section_name": "Maternity medical expenses overseas",
+            "page_number": 13
+          },
+          {
+            "section_number": "12",
+            "section_name": "Overseas hospitalisation daily benefit",
+            "page_number": 13
+          },
+          {
+            "section_number": "13",
+            "section_name": "Overseas ICU hospitalisation daily benefit",
+            "page_number": 14
+          },
+          {
+            "section_number": "14",
+            "section_name": "Hospitalisation daily benefit in Singapore",
+            "page_number": 14
+          }
+        ]
+      }
+    ],
+    "general_important_conditions": [
+      {
+        "condition_number": 1,
+        "description": "The round trip must begin and end in Singapore."
+      },
+      {
+        "condition_number": 2,
+        "description": "At the time of arranging the trip or taking out this insurance, neither you nor any other insured person is aware of any circumstances which are likely to lead to a claim under the policy."
+      },
+      {
+        "condition_number": 3,
+        "description": "At the time you send us your application for this insurance, none of the intended insured persons have already left Singapore on any trip meant to be covered by this insurance. An insured person is not covered for the entire trip if they leave Singapore before the start of the period of insurance."
+      },
+      {
+        "condition_number": 4,
+        "description": "Any insured child under the age of 12 years must be accompanied by a parent or adult guardian during the trip."
+      },
+      {
+        "condition_number": 5,
+        "description": "If an insured person has ever been refused cover or had special terms placed on them by any insurer for travel insurance, they must declare this at the point of application and we must accept them, or there will be no cover for them."
+      },
+      {
+        "condition_number": 6,
+        "description": "The country of residence for all insured persons is Singapore."
+      },
+      {
+        "condition_number": 7,
+        "description": "The insured persons are not travelling against the advice of a doctor or for the purpose of getting medical treatment."
+      },
+      {
+        "condition_number": 8,
+        "description": "For TravelEasy®, the insured persons must be in good health or free from physical defects."
+      },
+      {
+        "condition_number": 9,
+        "description": "To be eligible for cover under TravelEasy® Pre-Ex plans, the insured person must meet all the conditions stated under section 52 - Pre-Ex Critical Care."
+      }
+    ],
+    "definitions": [
+      {
+        "term": "Coverage",
+        "definition": "The insurance protection provided against specified risks or losses during the insured period.",
+        "sub_definitions": null
+      },
+      {
+        "term": "Coverage Amount",
+        "definition": "The maximum amount payable by the insurer under the policy for a particular coverage or claim.",
+        "sub_definitions": null
+      }
+    ],
+    "benefits": [
+      {
+        "section_number": "41",
+        "section_name": "Adventurous Activities Cover",
+        "description": "Covers accidental death or injury from taking part in or practising for specified adventurous activities for leisure and non-competitive purpose, with a licensed operator and following all safety and health instructions.",
+        "what_is_not_covered": [
+          "Please see the section on exclusions."
+        ]
+      },
+      {
+        "section_number": "42",
+        "section_name": "Golfing equipment, Green fees, Hole-in-one",
+        "description": "Covers loss or damage to golfing equipment due to accident or theft (not during play/practice), pre-booked overseas green fees not refundable if unable to play due to injury or illness, and cost of celebratory drinks for hole-in-one in an organised event.",
+        "maximum_payouts": [
+          {
+            "coverage_type": "Golfing equipment",
+            "premier_plan": "$1,500",
+            "elite_plan": "$1,000",
+            "standard_plan": "Not covered"
+          },
+          {
+            "coverage_type": "Green fees",
+            "premier_plan": "$750",
+            "elite_plan": "$500",
+            "standard_plan": "Not covered"
+          },
+          {
+            "coverage_type": "Hole-in-one",
+            "premier_plan": "$750",
+            "elite_plan": "$500",
+            "standard_plan": "Not covered"
+          }
+        ],
+        "what_is_not_covered": [
+          "Please see the section on exclusions."
+        ]
+      },
+      {
+        "section_number": "43",
+        "section_name": "Unused Entertainment Ticket",
+        "description": "Covers prepaid or unused portion of entertainment tickets if prevented from use due to listed events within 30 days before or during the trip. The insured person must seek cancellation refund from relevant parties first.",
+        "maximum_payouts": [
+          {
+            "coverage_type": "Each insured person",
+            "premier_plan": "$500",
+            "elite_plan": "$300"
+          },
+          {
+            "coverage_type": "Total for adult and children cover or family cover",
+            "premier_plan": "$1,000",
+            "elite_plan": "$600"
+          }
+        ]
+      },
+      {
+        "section_number": "44",
+        "section_name": "Rental Vehicle Excess",
+        "description": "Pays for the excess if an adult insured person is legally required to pay for accidental loss or damage to a rental vehicle (car or campervan) overseas, subject to conditions.",
+        "maximum_payouts": [
+          {
+            "coverage_type": "Each adult insured person",
+            "premier_plan": "$1,500",
+            "elite_plan": "$1,000",
+            "standard_plan": "Not covered"
+          }
+        ],
+        "what_is_not_covered": [
+          "Any loss or damage arising from wear and tear, gradual deterioration, damage from insects or vermin, built-in faults, or faults or damage which are not obvious",
+          "Damage to tyres and rims unless damage is caused to other parts of the rental vehicle in the same accident"
+        ]
+      },
+      {
+        "section_number": "45",
+        "section_name": "Returning a Rental Vehicle",
+        "description": "Covers reasonable costs for returning a rental vehicle to the nearest hire depot if an insured person cannot return it due to injury or illness during the journey abroad.",
+        "maximum_payouts": [
+          {
+            "coverage_type": "Each adult insured person",
+            "premier_plan": "$750",
+            "elite_plan": "$500",
+            "standard_plan": "Not covered"
+          }
+        ],
+        "what_is_not_covered": [
+          "Please see the section on exclusions."
+        ]
+      },
+      {
+        "section_number": "46",
+        "section_name": "Home Contents",
+        "description": "Covers adult insured person for loss or damage to home contents in Singapore while the home is vacant due to the journey, caused by fire or theft involving force and violence.",
+        "maximum_payouts": [
+          {
+            "coverage_type": "Total for platinum, gold and silver items, watches, jewellery, precious stones and furs",
+            "premier_plan": "$2,000",
+            "elite_plan": "$2,000",
+            "standard_plan": "$2,000"
+          },
+          {
+            "coverage_type": "Any one item, set or pair",
+            "premier_plan": "$1,000",
+            "elite_plan": "$1,000",
+            "standard_plan": "$1,000"
+          }
+        ]
+      },
+      {
+        "section_number": "47",
+        "section_name": "Domestic Pets Care",
+        "description": "Covers additional costs of pet boarding if an adult insured person cannot return to Singapore as scheduled due to injury, illness, or public transport/cattery delay.",
+        "maximum_payouts": [
+          {
+            "coverage_type": "Each adult insured person",
+            "premier_plan": "$75 per day up to $750",
+            "elite_plan": "$50 per day up to $500",
+            "standard_plan": "Not covered"
+          }
+        ],
+        "what_is_not_covered": [
+          "Please see the section on exclusions."
+        ]
+      },
+      {
+        "section_number": "48",
+        "section_name": "Terrorism Cover",
+        "description": "Extends cover for losses suffered through acts of terrorism, except when involving biological weapons, chemical agents, or nuclear devices.",
+        "maximum_payouts": [
+          {
+            "coverage_type": "Each insured person",
+            "premier_plan": "$500,000",
+            "elite_plan": "$300,000",
+            "standard_plan": "$200,000"
+          },
+          {
+            "coverage_type": "Total for adult and children cover or family cover",
+            "premier_plan": "$2,000,000",
+            "elite_plan": "$1,200,000",
+            "standard_plan": "$800,000"
+          },
+          {
+            "coverage_type": "Group cover (all insured persons per event)",
+            "premier_plan": "$5,000,000",
+            "elite_plan": "$5,000,000",
+            "standard_plan": "$5,000,000"
+          }
+        ]
+      },
+      {
+        "section_number": "49",
+        "section_name": "Passive War",
+        "description": "Extends section 1 to cover death or bodily injury due to war, riot, revolution, or similar events, with specific restrictions."
+      },
+      {
+        "section_number": "50",
+        "section_name": "Hijack of Public Transport",
+        "description": "Pays for every full six hours a person is prevented from reaching their destination due to hijack of public transport.",
+        "maximum_payouts": [
+          {
+            "coverage_type": "Each insured person, every full six hours",
+            "premier_plan": "$300 (up to $6,000)",
+            "elite_plan": "$200 (up to $4,000)",
+            "standard_plan": "$100 (up to $2,000)"
+          },
+          {
+            "coverage_type": "Total for adult and children cover or family cover (maximum)",
+            "premier_plan": "$15,000",
+            "elite_plan": "$10,000",
+            "standard_plan": "$5,000"
+          }
+        ],
+        "what_is_not_covered": [
+          "Please see the section on exclusions."
+        ]
+      },
+      {
+        "section_number": "51",
+        "section_name": "Kidnap and Hostage",
+        "description": "Pays benefit for every full six hours an insured person is kidnapped, held, abducted, or restrained by a criminal during the journey.",
+        "maximum_payouts": [
+          {
+            "coverage_type": "Each insured person, every full six hours",
+            "premier_plan": "$300 (up to $6,000)",
+            "elite_plan": "$200 (up to $4,000)",
+            "standard_plan": "$100 (up to $2,000)"
+          },
+          {
+            "coverage_type": "Total for adult and children cover or family cover (maximum)",
+            "premier_plan": "$15,000",
+            "elite_plan": "$10,000",
+            "standard_plan": "$5,000"
+          }
+        ],
+        "what_is_not_covered": [
+          "Please see the section on exclusions."
+        ]
+      },
+      {
+        "section_number": "52",
+        "section_name": "Pre-Ex Critical Care",
+        "description": "For TravelEasy® Pre-Ex plans only: extends section 6 and 16 if, during a trip, the insured person suffers an acute onset of a pre-existing medical condition. Pays for relevant medical and evacuation expenses up to 30 days from the onset.",
+        "maximum_payouts": [
+          {
+            "coverage_type": "Each insured person",
+            "premier_plan": "$200,000",
+            "elite_plan": "$150,000",
+            "standard_plan": "$100,000"
+          }
+        ],
+        "what_is_not_covered": [
+          "Any pre-existing medical condition that worsens within the 30 days before the start of the trip with certain medical advisories.",
+          "Terminal illness.",
+          "Outpatient medical treatment.",
+          "Medical expenses incurred in Singapore."
+        ]
+      }
+    ]
+  },
+  "extraction_metadata": {
+    "field_metadata": {
+      "error": "Input should be a valid list at path (important_conditions)\nincorrect type or null value provided at path (sections_under_covid19_cover)\nInput should be a valid list at path (covid19_cover_conditions)\nInput should be a valid list at path (covid19_cover_exclusions)\nmissing required value at path (benefits.0.table_of_compensation)\nmissing required value at path (benefits.0.notes)\nmissing required value at path (benefits.0.maximum_payouts)\nmissing required value at path (benefits.0.terms_and_limits_apply)\nmissing required value at path (benefits.0.services_available)\nmissing required value at path (benefits.1.table_of_compensation)\nmissing required value at path (benefits.1.notes)\nmissing required value at path (benefits.1.terms_and_limits_apply)\nmissing required value at path (benefits.1.services_available)\nmissing required value at path (benefits.2.table_of_compensation)\nmissing required value at path (benefits.2.notes)\nmissing required value at path (benefits.2.maximum_payouts.0.standard_plan)\nmissing required value at path (benefits.2.maximum_payouts.1.standard_plan)\nmissing required value at path (benefits.2.what_is_not_covered)\nmissing required value at path (benefits.2.terms_and_limits_apply)\nmissing required value at path (benefits.2.services_available)\nmissing required value at path (benefits.3.table_of_compensation)\nmissing required value at path (benefits.3.notes)\nmissing required value at path (benefits.3.terms_and_limits_apply)\nmissing required value at path (benefits.3.services_available)\nmissing required value at path (benefits.4.table_of_compensation)\nmissing required value at path (benefits.4.notes)\nmissing required value at path (benefits.4.terms_and_limits_apply)\nmissing required value at path (benefits.4.services_available)\nmissing required value at path (benefits.5.table_of_compensation)\nmissing required value at path (benefits.5.notes)\nmissing required value at path (benefits.5.what_is_not_covered)\nmissing required value at path (benefits.5.terms_and_limits_apply)\nmissing required value at path (benefits.5.services_available)\nmissing required value at path (benefits.6.table_of_compensation)\nmissing required value at path (benefits.6.notes)\nmissing required value at path (benefits.6.terms_and_limits_apply)\nmissing required value at path (benefits.6.services_available)\nmissing required value at path (benefits.7.table_of_compensation)\nmissing required value at path (benefits.7.notes)\nmissing required value at path (benefits.7.what_is_not_covered)\nmissing required value at path (benefits.7.terms_and_limits_apply)\nmissing required value at path (benefits.7.services_available)\nmissing required value at path (benefits.8.table_of_compensation)\nmissing required value at path (benefits.8.notes)\nmissing required value at path (benefits.8.maximum_payouts)\nmissing required value at path (benefits.8.what_is_not_covered)\nmissing required value at path (benefits.8.terms_and_limits_apply)\nmissing required value at path (benefits.8.services_available)\nmissing required value at path (benefits.9.table_of_compensation)\nmissing required value at path (benefits.9.notes)\nmissing required value at path (benefits.9.terms_and_limits_apply)\nmissing required value at path (benefits.9.services_available)\nmissing required value at path (benefits.10.table_of_compensation)\nmissing required value at path (benefits.10.notes)\nmissing required value at path (benefits.10.terms_and_limits_apply)\nmissing required value at path (benefits.10.services_available)\nmissing required value at path (benefits.11.table_of_compensation)\nmissing required value at path (benefits.11.notes)\nmissing required value at path (benefits.11.terms_and_limits_apply)\nmissing required value at path (benefits.11.services_available)"
+    },
+    "usage": {
+      "num_pages_extracted": 59,
+      "num_document_tokens": 39341,
+      "num_output_tokens": 13815
+    }
+  }
+}
