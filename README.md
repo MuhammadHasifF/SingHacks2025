@@ -60,7 +60,7 @@ Build agentic AI systems that transform travel insurance into a seamless convers
 ## 📁 Project Structure
 
 ```plaintext
-insurance-jazzbot/
+SingHacks2025/
 │
 ├── README.md                  # Ancileo × MSIG overview + setup guide
 ├── requirements.txt
