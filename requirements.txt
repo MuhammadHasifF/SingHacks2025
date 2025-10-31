@@ -1,7 +1,7 @@
 ﻿streamlit
 fastapi
 uvicorn[standard]
-langchain
+langchain-groq
 llama-index
 chromadb
 pydantic
