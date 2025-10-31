@@ -1,67 +1,42 @@
-"""
-backend/ingestion/parse_pdf.py
-------------------------------
-Extracts text from PDF insurance policy files.
-Includes fallback OCR for scanned/image-based PDFs.
-"""
+# ingest.py
+# This script loads PDFs using LlamaIndex and indexes them in ChromaDB.
 
-import os
-import pdfplumber
-from typing import Dict, Any
-from pathlib import Path
+from llama_index.core import SimpleDirectoryReader, VectorStoreIndex
+# NEW, CORRECT line
+from llama_index.vector_stores.chroma import ChromaVectorStore
+from llama_index.core import StorageContext
+import chromadb
 
+# --- 1. LOAD AND PARSE DATA ---
 
-def extract_text_from_pdf(pdf_path: str) -> str:
-    """
-    Extract text from a PDF file using pdfplumber.
+# Point this to the folder containing your PDF files
+pdf_folder_path = "./data/samples" 
 
-    Parameters
-    ----------
-    pdf_path : str
-        Path to the input PDF.
+print(f"Loading documents from {pdf_folder_path}...")
 
-    Returns
-    -------
-    str
-        Extracted raw text.
-    """
-    all_text = []
+# This is the LlamaIndex way. It will automatically find
+# pypdf, open all .pdf files, and extract the text.
+reader = SimpleDirectoryReader(input_dir=pdf_folder_path)
+documents = reader.load_data()
 
-    with pdfplumber.open(pdf_path) as pdf:
-        for page in pdf.pages:
-            text = page.extract_text() or ""
-            all_text.append(text)
+print(f"Successfully loaded {len(documents)} document(s).")
+if documents:
+    print(f"Example document source: {documents[0].metadata.get('file_name')}")
 
-    return "\n".join(all_text).strip()
+# --- 2. SET UP STORAGE AND INDEX ---
 
+# Set up ChromaDB (using libraries from your requirements.txt)
+db = chromadb.PersistentClient(path="./chroma_db")
+chroma_collection = db.get_or_create_collection("policy_docs")
+vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+storage_context = StorageContext.from_defaults(vector_store=vector_store)
 
-def parse_policy_pdf(pdf_path: str) -> Dict[str, Any]:
-    """
-    Parse and structure basic metadata from a PDF file.
+# 3. Create the index
+# The 'documents' variable from SimpleDirectoryReader goes right in.
+print("Indexing documents in ChromaDB...")
+index = VectorStoreIndex.from_documents(
+    documents, 
+    storage_context=storage_context
+)
 
-    Parameters
-    ----------
-    pdf_path : str
-        File path to the PDF document.
-
-    Returns
-    -------
-    dict
-        Basic structured metadata and raw text.
-    """
-    text = extract_text_from_pdf(pdf_path)
-    filename = Path(pdf_path).stem
-
-    return {
-        "filename": filename,
-        "text": text,
-        "page_count": len(text.split("\f")),
-        "size_kb": round(os.path.getsize(pdf_path) / 1024, 2),
-    }
-
-
-if __name__ == "__main__":
-    # Example test
-    sample_pdf = "./data/samples/policy_sample.pdf"
-    result = parse_policy_pdf(sample_pdf)
-    print(f"✅ Extracted {len(result['text'])} characters from {result['filename']}.")
+print("✅ All documents successfully parsed and indexed!")
