@@ -2,6 +2,7 @@
 streamlit>=1.51.0
 fastapi>=0.117.0
 uvicorn[standard]>=0.30.0
+python-multipart
 
 # AI & LLM
 langchain-groq>=1.0.0
@@ -27,3 +28,4 @@ pytesseract>=0.3.13
 pydantic>=2.11.0
 requests>=2.31.0
 python-dotenv>=1.1.0
+
