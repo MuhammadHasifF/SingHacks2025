@@ -2,6 +2,8 @@ import streamlit as st
 import requests
 import uuid
 import json
+import base64
+import io
 from pathlib import Path
 from components.upload_panel import render_upload_panel
 
@@ -131,6 +133,20 @@ button[aria-label*="Remove"] *,
   border-radius:12px !important;
   box-shadow:0 6px 14px rgba(228,0,43,.18);
 }
+
+/* Voice input styling */
+[data-testid="stAudioInput"] {
+  margin-top: 8px;
+}
+
+[data-testid="stAudioInput"] > div {
+  height: 60px !important;
+  padding: 8px !important;
+}
+
+[data-testid="stAudioInput"] p {
+  display: none !important;
+}
 """
 
 st.set_page_config(page_title="MSIG Travel Assistant", layout="wide")
@@ -219,7 +235,8 @@ if not sid:
   sid = f"user_{uuid.uuid4().hex[:8]}"
   st.query_params = {**params, "sid": sid}
 
-st.session_state.setdefault("session_id", sid)
+# Always update session_id to match query params
+st.session_state.session_id = sid
 if "messages" not in st.session_state:
   st.session_state.messages = load_messages(st.session_state.session_id)
 
@@ -252,13 +269,16 @@ for msg in st.session_state.messages:
   with st.chat_message(msg["role"]):
     st.markdown(msg["content"], unsafe_allow_html=True)
 
-# Chat input + call backend
-if prompt := st.chat_input("Ask about trip cancellation, medical coverage, eligibility..."):
+# Chat input
+text_prompt = st.chat_input("Ask about trip cancellation, medical coverage, eligibility...")
+
+# Process if we have input
+if text_prompt:
   # User message
-  st.session_state.messages.append({"role": "user", "content": prompt})
+  st.session_state.messages.append({"role": "user", "content": text_prompt})
   save_messages(st.session_state.session_id, st.session_state.messages)
   with st.chat_message("user"):
-    st.markdown(prompt)
+    st.markdown(text_prompt)
 
   # Backend call
   with st.chat_message("assistant"):
@@ -266,7 +286,7 @@ if prompt := st.chat_input("Ask about trip cancellation, medical coverage, eligi
       try:
         resp = requests.post(
           CHAT_URL,
-          json={"question": prompt, "session_id": st.session_state.session_id},
+          json={"question": text_prompt, "session_id": st.session_state.session_id},
           timeout=120,
         )
 
