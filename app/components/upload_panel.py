@@ -187,10 +187,111 @@ def render_upload_panel(api_base: str):
         _render_trip_summary(trip)
         if quotes and recommended:
             _render_quotes(quotes, recommended)
+        
+        # Show payment success message if payment was confirmed from main.py
+        if st.session_state.get("payment_confirmed"):
+            st.success("🎉 Payment confirmed successfully! Your insurance policy is now active.")
+            st.balloons()
+            # Clear the flag
+            st.session_state.payment_confirmed = False
 
         # >>> Restored: Proceed to Quote button <<<
         if st.button("Proceed to Quote ➜", use_container_width=True, type="primary"):
-            st.info(f"Next step: Quote generation for {recommended} (mock flow).")
+            # Get the price for the recommended plan
+            recommended_quote = next((q for q in quotes if q["plan"] == recommended), None)
+            if recommended_quote:
+                price_str = recommended_quote.get("price", "—")
+                
+                # Parse price from "$42.50" to cents (4250)
+                import re
+                price_clean = re.sub(r'[^\d.]', '', str(price_str))
+                try:
+                    amount_cents = int(float(price_clean) * 100)
+                except (ValueError, TypeError):
+                    st.error(f"Invalid price format: {price_str}")
+                    return
+                
+                # Get session ID
+                session_id = st.session_state.get("session_id", "default")
+                
+                # Call /payment-intent API
+                try:
+                    response = requests.post(
+                        f"{api_base}/payment-intent",
+                        json={
+                            "session_user_id": session_id,
+                            "product_name": recommended,
+                            "purchase_amount": amount_cents
+                        },
+                        timeout=30
+                    )
+                    
+                    if response.status_code == 200:
+                        result = response.json()
+                        payment_intent_id = result.get("payment_intent_id")
+                        st.success(f"✅ Payment intent created: {payment_intent_id}")
+                        
+                        # Call /payment-status/{payment_intent_id} API
+                        try:
+                            status_response = requests.get(
+                                f"{api_base}/payment-status/{payment_intent_id}",
+                                timeout=10
+                            )
+                            
+                            if status_response.status_code == 200:
+                                payment_status = status_response.text
+                                if payment_status:
+                                    st.info(f"📊 Payment Status: {payment_status}")
+                                else:
+                                    st.warning("⚠️ Payment status not found")
+                            else:
+                                st.warning(f"⚠️ Could not check payment status: {status_response.status_code}")
+                        except Exception as status_error:
+                            st.warning(f"⚠️ Error checking payment status: {status_error}")
+                        
+                        # Call /stripe-checkout POST API
+                        try:
+                            checkout_response = requests.post(
+                                f"{api_base}/stripe-checkout",
+                                json={
+                                    "payment_intent_id": payment_intent_id,
+                                    "product_name": recommended,
+                                    "purchase_amount": amount_cents
+                                },
+                                timeout=30
+                            )
+                            
+                            if checkout_response.status_code == 200:
+                                checkout_result = checkout_response.json()
+                                # Extract URL from Stripe checkout session response
+                                checkout_url = checkout_result.get("url") or checkout_result.get("checkout_url")
+                                checkout_session_id = checkout_result.get("id") or checkout_result.get("session_id")
+                                
+                                if checkout_url:
+                                    # Store session IDs for later confirmation
+                                    st.session_state["current_payment_intent"] = payment_intent_id
+                                    if checkout_session_id:
+                                        st.session_state["checkout_session_id"] = checkout_session_id
+                                    
+                                    st.success("✅ Stripe checkout session created!")
+                                    # Redirect user to checkout URL
+                                    st.markdown(
+                                        f'<meta http-equiv="refresh" content="0;url={checkout_url}">',
+                                        unsafe_allow_html=True
+                                    )
+                                    st.link_button("🔗 Complete Payment →", checkout_url, use_container_width=True, type="primary")
+                                else:
+                                    # If URL is not directly available, try to construct from session ID
+                                    st.warning("⚠️ Checkout URL not found in response. Response: " + str(checkout_result)[:200])
+                            else:
+                                st.error(f"❌ Stripe checkout creation failed: {checkout_response.status_code}")
+                        except Exception as checkout_error:
+                            st.error(f"❌ Error creating Stripe checkout: {checkout_error}")
+                    else:
+                        st.error(f"❌ Payment intent creation failed: {response.status_code}")
+                except Exception as e:
+                    st.error(f"❌ Error calling payment API: {e}")
+            
         return
 
     # -------- Uploader view --------
