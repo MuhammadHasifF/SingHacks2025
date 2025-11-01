@@ -10,3 +10,8 @@ logs/*.log
 .vscode/
 .idea/
 .DS_Store
+# Session and temporary files
+.sessions/
+storage/history/
+temp_audio.wav
+*.wav
