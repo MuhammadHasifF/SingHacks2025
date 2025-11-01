@@ -12,3 +12,5 @@ python-dotenv
 langchain_community
 pymupdf
 groq
+# langchain_community
+python-multipart
