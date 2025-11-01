@@ -10,8 +10,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.chains.conversational_agent import create_insurance_agent
 from backend.chains.response_formatter import format_response
 from backend.chains.intent import detect_intent
+from fastapi import UploadFile, File
+import os
 
-app = FastAPI(title="JazzBot API", version="1.0")
+
+app = FastAPI(title="Insurance ScammerAPI", version="1.0")
 
 # CORS for local dev / Streamlit
 app.add_middleware(
@@ -64,3 +67,22 @@ async def chat(request: Request):
             citations=[],
             meta={"error": str(e)},
         )
+
+UPLOAD_DIR = "data/uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+@app.post("/upload")
+async def upload_file(file: UploadFile = File(...)):
+    """
+    Upload a PDF or image.
+    Saves the file to /data/uploads for now (later DB/processing).
+    """
+    try:
+        file_path = os.path.join(UPLOAD_DIR, file.filename)
+        with open(file_path, "wb") as f:
+            f.write(await file.read())
+        return {"ok": True, "filename": file.filename, "path": file_path}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
+    
