@@ -99,10 +99,7 @@ def create_insurance_agent():
             config={"configurable": {"session_id": session_id}},
         )
 
-        # Step 3 — Add citation footer
-        return add_citation(
-            ai_response,
-            "MSIG TravelEasy / Pre-Ex / Scootsurance Official Policy Wordings (2025)",
-        )
+        # Step 3 — Add clickable citation footer (links to real PDF files)
+        return add_citation(ai_response)
 
     return ask
