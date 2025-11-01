@@ -1,8 +1,10 @@
 # components/upload_panel.py
+# Enhanced version with separate itinerary and ticket uploads
 
 import json
 import mimetypes
 from pathlib import Path
+from datetime import datetime
 
 import requests
 import streamlit as st
@@ -36,13 +38,64 @@ def _fmt_cost(val):
         return str(val) if val is not None else "—"
 
 
+def _calculate_duration_from_dates(dates_str: str) -> int:
+    """
+    Calculate duration in days from a date range string.
+    Format: "YYYY-MM-DD to YYYY-MM-DD"
+    
+    Returns number of days or 0 if parsing fails.
+    """
+    if not dates_str or dates_str == "None":
+        return 0
+    
+    try:
+        # Try to parse "YYYY-MM-DD to YYYY-MM-DD"
+        if " to " in dates_str:
+            parts = dates_str.split(" to ")
+            if len(parts) == 2:
+                start_date = datetime.strptime(parts[0].strip(), "%Y-%m-%d")
+                end_date = datetime.strptime(parts[1].strip(), "%Y-%m-%d")
+                delta = end_date - start_date
+                return max(1, delta.days)  # At least 1 day
+    except:
+        pass
+    
+    return 0
+
+
 def _render_trip_summary(trip: dict):
+    """Display comprehensive trip summary with all extracted information."""
     with st.container(border=True):
-        st.markdown("### Trip Summary (Preview)")
-        st.markdown(f"**Traveler:** {trip.get('traveler_name', '—')}")
-        st.markdown(f"**Destination:** {trip.get('destination', '—')}")
-        st.markdown(f"**Dates:** {trip.get('dates', '—')}")
-        st.markdown(f"**Trip Cost:** {_fmt_cost(trip.get('trip_cost', '—'))}")
+        st.markdown("### Trip Summary")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            travelers = trip.get('traveler_names') or trip.get('traveler_name') or trip.get('passenger_details')
+            st.markdown(f"**Traveler(s):** {travelers if travelers else 'None'}")
+            st.markdown(f"**Destination:** {trip.get('destination', 'None')}")
+            st.markdown(f"**Dates:** {trip.get('dates', 'None')}")
+            duration = trip.get('duration')
+            st.markdown(f"**Duration:** {f'{duration} days' if duration else 'None'}")
+        
+        with col2:
+            st.markdown(f"**Trip Cost:** {_fmt_cost(trip.get('trip_cost', 0))}")
+            st.markdown(f"**Flight:** {trip.get('flight_info', 'None')}")
+            st.markdown(f"**Passengers:** {trip.get('passenger_details', 'None')}")
+            if trip.get('special_requirements'):
+                st.markdown(f"**Special Requirements:** {trip.get('special_requirements', 'None')}")
+        
+        # Additional details
+        if trip.get('location') or trip.get('activities') or trip.get('timeline') or trip.get('trip_purpose'):
+            st.divider()
+            with st.expander("Additional Trip Details", expanded=False):
+                if trip.get('location'):
+                    st.markdown(f"**Locations:** {trip.get('location')}")
+                if trip.get('activities'):
+                    st.markdown(f"**Activities:** {trip.get('activities')}")
+                if trip.get('timeline'):
+                    st.markdown(f"**Timeline:** {trip.get('timeline')}")
+                if trip.get('trip_purpose'):
+                    st.markdown(f"**Trip Purpose:** {trip.get('trip_purpose')}")
 
 
 def _render_quotes(quotes: list[dict], recommended_plan: str):
@@ -50,11 +103,26 @@ def _render_quotes(quotes: list[dict], recommended_plan: str):
     st.subheader("Insurance Plan Comparison")
     for q in quotes:
         highlight = "**Recommended**" if q["plan"] == recommended_plan else ""
+        
+        # Build coverage details with all available fields
+        coverage_lines = []
+        if q.get('medical') and q.get('medical') != "$0":
+            coverage_lines.append(f"• Medical: `{q['medical']}`")
+        if q.get('cancellation') and q.get('cancellation') != "$0":
+            coverage_lines.append(f"• Trip Cancellation: `{q['cancellation']}`")
+        if q.get('death_disablement') and q.get('death_disablement') != "$0":
+            coverage_lines.append(f"• Accidental Death/Disablement: `{q['death_disablement']}`")
+        if q.get('dental') and q.get('dental') != "$0":
+            coverage_lines.append(f"• Emergency Dental: `{q['dental']}`")
+        if q.get('travel_delay') and q.get('travel_delay') != "$0":
+            coverage_lines.append(f"• Travel Delay: `{q['travel_delay']}`")
+        
+        coverage_text = "\n".join(coverage_lines) if coverage_lines else "• Coverage details in policy PDF"
+        
         st.markdown(
             f"""
 **{q['plan']}**  
-• Medical Coverage: `{q['medical']}`  
-• Trip Cancellation: `{q['cancellation']}`  
+{coverage_text}
 • Price: `{q['price']}`  
 {highlight}  
 [View Policy PDF]({q['link']})
@@ -63,208 +131,205 @@ def _render_quotes(quotes: list[dict], recommended_plan: str):
         )
     st.divider()
     price = next((q["price"] for q in quotes if q["plan"] == recommended_plan), "—")
-    # Keep Streamlit's green success highlight for the recommended plan
     st.success(f"Recommended Plan: {recommended_plan} ({price})")
 
 
-def _guess_mime(filename: str) -> str:
-    mime, _ = mimetypes.guess_type(filename)
-    return mime or "application/octet-stream"
+def _merge_trip_data(itinerary_data: dict, ticket_data: dict) -> dict:
+    """Merge itinerary and ticket data into complete trip information."""
+    merged = {}
+    
+    # Start with itinerary data (destination, dates, costs)
+    merged.update(itinerary_data)
+    
+    # Calculate duration from both itinerary and ticket dates
+    itinerary_duration = _calculate_duration_from_dates(itinerary_data.get("dates", ""))
+    ticket_duration = _calculate_duration_from_dates(ticket_data.get("dates", ""))
+    
+    # Use the longer duration if ticket has dates
+    if ticket_duration > 0:
+        # Also check explicit duration field
+        ticket_explicit_duration = ticket_data.get("duration", 0) or 0
+        ticket_duration = max(ticket_duration, ticket_explicit_duration)
+        
+        # Take the maximum duration from either source
+        itinerary_explicit_duration = itinerary_data.get("duration", 0) or 0
+        itinerary_duration = max(itinerary_duration, itinerary_explicit_duration)
+        
+        final_duration = max(itinerary_duration, ticket_duration)
+        
+        # If ticket has dates and no itinerary dates, use ticket dates
+        if ticket_duration > 0 and itinerary_duration == 0:
+            merged["dates"] = ticket_data.get("dates")
+        
+        # Set the duration
+        merged["duration"] = final_duration
+    
+    # Override/add ticket-specific information
+    # Use traveler_names from ticket if available
+    if ticket_data.get("traveler_names"):
+        merged["traveler_names"] = ticket_data.get("traveler_names")
+    elif ticket_data.get("passenger_details"):
+        merged["traveler_names"] = ticket_data.get("passenger_details")
+    
+    # Add passenger info from ticket
+    merged["passenger_count"] = ticket_data.get("passenger_count", 1)
+    merged["passenger_details"] = ticket_data.get("passenger_details")
+    merged["special_requirements"] = ticket_data.get("special_requirements")
+    
+    # Keep all itinerary fields
+    if itinerary_data.get("traveler_name"):
+        if not merged.get("traveler_names"):
+            merged["traveler_names"] = itinerary_data.get("traveler_name")
+    
+    return merged
 
 
 def render_upload_panel(api_base: str):
-    """Upload + summary + mock plan comparison with stored-file UX and immediate UI updates."""
-    st.subheader("Upload a Travel Document")
-    st.caption("Upload a PDF or image. Saved locally to data/uploads/. Extraction is mocked for now.")
-
-    # From main.py (must be initialized before calling this)
-    sid = st.session_state.get("session_id") or dict(st.query_params).get("sid") or "default"
-
-    # Panel mode: 'stored' (show current file info) or 'upload' (show uploader)
-    if "upload_panel_mode" not in st.session_state:
-        saved = _load_payload(sid)
-        saved_path = Path(saved.get("path", "")) if saved else None
-        st.session_state.upload_panel_mode = "stored" if (saved and saved_path and saved_path.exists()) else "upload"
-
-    mode = st.session_state.upload_panel_mode
+    """Enhanced upload panel with separate itinerary and ticket uploads."""
+    st.header("Quick Buy Insurance")
+    st.caption("Upload your travel documents for instant quotes and personalized recommendations.")
+    
+    # Initialize session
+    sid = st.session_state.get("session_id") or "default"
+    
+    # Load saved data
     saved = _load_payload(sid)
-    saved_path = Path(saved.get("path", "")) if saved else None
-    saved_filename = saved.get("filename") if saved else None
-
-    # -------- Stored file view --------
-    if mode == "stored" and saved and saved_path and saved_path.exists():
-        with st.container(border=True):
-            st.markdown("#### Current File (stored)")
-            st.markdown(f"**File:** `{saved_filename or saved_path.name}`")
-            st.caption(f"Location on server: `{saved_path}`")
-
-            col1, col2, col3, col4 = st.columns(4)
-
-            # Reuse: rerun extraction without asking user to upload again
-            with col1:
-                if st.button("Reuse this file", use_container_width=True, type="primary"):
-                    try:
-                        with open(saved_path, "rb") as f:
-                            resp = requests.post(
-                                f"{api_base}/upload_extract",
-                                files={"file": (saved_filename or saved_path.name, f, _guess_mime(saved_filename or saved_path.name))},
-                                timeout=120,
-                            )
-                        if resp.status_code != 200:
-                            st.error(f"Server error: {resp.status_code}")
-                        else:
-                            data = resp.json()
-                            if not data.get("ok"):
-                                st.error(f"Upload failed: {data.get('error', 'Unknown error')}")
-                            else:
-                                trip2 = data.get("trip", {})
-                                # local quotes list (mock)
-                                quotes = [
-                                    {"plan": "TravelEasy QTD032212", "medical": "$100,000", "cancellation": "$5,000",
-                                     "price": "$42.50", "link": "data/samples/TravelEasy Policy QTD032212.pdf"},
-                                    {"plan": "TravelEasy Pre-Ex QTD032212-PX", "medical": "$100,000 (Pre-Existing)",
-                                     "cancellation": "$4,000", "price": "$49.90",
-                                     "link": "data/samples/TravelEasy Pre-Ex Policy QTD032212-PX.pdf"},
-                                    {"plan": "Scootsurance QSR022206", "medical": "$80,000",
-                                     "cancellation": "$3,000", "price": "$38.00",
-                                     "link": "data/samples/Scootsurance QSR022206_updated.pdf"},
-                                ]
-                                try:
-                                    tc = float(trip2.get("trip_cost", 0) or 0)
-                                except Exception:
-                                    tc = 0.0
-                                recommended = "Scootsurance QSR022206" if tc < 3000 else "TravelEasy QTD032212"
-
-                                _save_payload(
-                                    sid,
-                                    {
-                                        "trip": trip2,
-                                        "quotes": quotes,
-                                        "recommended_plan": recommended,
-                                        "filename": saved_filename or saved_path.name,
-                                        "path": str(saved_path),
-                                    },
-                                )
-                                # refresh UI immediately
-                                st.session_state.upload_panel_mode = "stored"
-                                st.rerun()
-                    except Exception as e:
-                        st.error(f"Reuse failed: {e}")
-
-            # Download
-            with col2:
-                try:
-                    with open(saved_path, "rb") as f:
-                        st.download_button("Download", f, file_name=saved_filename or saved_path.name, use_container_width=True)
-                except Exception:
-                    st.caption("Download unavailable from this process.")
-
-            # Replace -> switch to uploader mode
-            with col3:
-                if st.button("Replace file", use_container_width=True, type="primary"):
-                    st.session_state.upload_panel_mode = "upload"
-                    st.rerun()
-
-            # Remove -> delete server file + clear record, switch to upload mode
-            with col4:
-                if st.button("Remove file", type="secondary", use_container_width=True):
-                    try:
-                        r = requests.post(f"{api_base}/delete_upload", json={"path": str(saved_path)}, timeout=60)
-                        ok = (r.status_code == 200 and r.json().get("ok"))
-                        if not ok:
-                            st.error(f"Delete failed: {r.text}")
-                        else:
-                            _save_payload(sid, {})  # clear local record
-                            st.session_state.upload_panel_mode = "upload"
-                            st.rerun()
-                    except Exception as e:
-                        st.error(f"Delete failed: {e}")
-
-        # Render summary below the controls
-        trip = saved.get("trip", {})
-        quotes = saved.get("quotes", [])
-        recommended = saved.get("recommended_plan")
-        _render_trip_summary(trip)
-        if quotes and recommended:
-            _render_quotes(quotes, recommended)
-
-        # >>> Restored: Proceed to Quote button <<<
-        if st.button("Proceed to Quote ➜", use_container_width=True, type="primary"):
-            st.info(f"Next step: Quote generation for {recommended} (mock flow).")
-        return
-
-    # -------- Uploader view --------
-    file = st.file_uploader("Choose a file", type=["pdf", "png", "jpg", "jpeg", "webp"])
-    if not file:
-        # If no new file and we still have saved data, show it in a collapsible section
-        if saved:
-            with st.expander("Previously stored details", expanded=False):
-                trip = saved.get("trip", {})
-                quotes = saved.get("quotes", [])
-                recommended = saved.get("recommended_plan")
-                _render_trip_summary(trip)
-                if quotes and recommended:
-                    _render_quotes(quotes, recommended)
-
-                # >>> Restored: Proceed to Quote button (when viewing saved details in expander) <<<
-                if quotes and recommended and st.button("Proceed to Quote ➜", use_container_width=True, type="primary", key="proceed_expander"):
-                    st.info(f"Next step: Quote generation for {recommended} (mock flow).")
-        return
-
-    with st.spinner("Uploading and extracting..."):
-        resp = requests.post(
-            f"{api_base}/upload_extract",
-            files={"file": (file.name, file, file.type)},
-            timeout=120,
+    
+    # Two upload sections: Itinerary and Ticket
+    with st.container(border=True):
+        st.markdown("#### Step 1: Upload Itinerary")
+        st.caption("Upload your travel itinerary (destination, dates, flight details)")
+        
+        col1, col2 = st.columns(2)
+        
+        itinerary_file = col1.file_uploader(
+            "Choose itinerary file", 
+            type=["pdf", "png", "jpg", "jpeg", "webp"],
+            key="itinerary_uploader"
         )
+        
+        # Show saved itinerary status
+        if saved.get("itinerary_data"):
+            col2.success("Itinerary uploaded")
+            col2.write(f"**Destination:** {saved.get('itinerary_data', {}).get('destination', '—')}")
+            col2.write(f"**Dates:** {saved.get('itinerary_data', {}).get('dates', '—')}")
+        else:
+            col2.info("No itinerary uploaded yet")
+        
+        # Upload itinerary - check if this is a new file
+        if itinerary_file:
+            last_processed = st.session_state.get("last_itinerary_file", None)
+            if itinerary_file.name != last_processed:
+                with st.spinner("Extracting itinerary information..."):
+                    files = {"file": (itinerary_file.name, itinerary_file, itinerary_file.type)}
+                    data = {"doc_type": "itinerary"}
+                    
+                    resp = requests.post(
+                        f"{api_base}/upload_extract",
+                        files=files,
+                        data=data,
+                        timeout=120,
+                    )
+                    
+                    if resp.status_code == 200:
+                        result = resp.json()
+                        if result.get("ok"):
+                            saved["itinerary_data"] = result.get("data", {})
+                            st.session_state["last_itinerary_file"] = itinerary_file.name
+                            st.success(f"Extracted itinerary from {itinerary_file.name}")
+                            _save_payload(sid, saved)
+                            st.rerun()
+                        else:
+                            st.error(f"Extraction failed: {result.get('error', 'Unknown error')}")
+                    else:
+                        st.error(f"Upload failed: {resp.status_code}")
+    
+    with st.container(border=True):
+        st.markdown("#### Step 2: Upload Ticket Information")
+        st.caption("Upload your booking/ticket (passengers, personal info)")
+        
+        col1, col2 = st.columns(2)
+        
+        ticket_file = col1.file_uploader(
+            "Choose ticket file", 
+            type=["pdf", "png", "jpg", "jpeg", "webp"],
+            key="ticket_uploader"
+        )
+        
+        # Show saved ticket status
+        if saved.get("ticket_data"):
+            col2.success("Ticket information uploaded")
+            ticket_info = saved.get('ticket_data', {})
+            col2.write(f"**Passengers:** {ticket_info.get('passenger_details', '—')}")
+            if ticket_info.get('dates'):
+                col2.write(f"**Dates:** {ticket_info.get('dates', '—')}")
+        else:
+            col2.info("No ticket uploaded yet")
+        
+        # Upload ticket - check if this is a new file
+        if ticket_file:
+            last_processed = st.session_state.get("last_ticket_file", None)
+            if ticket_file.name != last_processed:
+                with st.spinner("Extracting ticket information..."):
+                    files = {"file": (ticket_file.name, ticket_file, ticket_file.type)}
+                    data = {"doc_type": "ticket"}
+                    
+                    resp = requests.post(
+                        f"{api_base}/upload_extract",
+                        files=files,
+                        data=data,
+                        timeout=120,
+                    )
+                    
+                    if resp.status_code == 200:
+                        result = resp.json()
+                        if result.get("ok"):
+                            saved["ticket_data"] = result.get("data", {})
+                            st.session_state["last_ticket_file"] = ticket_file.name
+                            st.success(f"Extracted ticket info from {ticket_file.name}")
+                            _save_payload(sid, saved)
+                            st.rerun()
+                        else:
+                            st.error(f"Extraction failed: {result.get('error', 'Unknown error')}")
+                    else:
+                        st.error(f"Upload failed: {resp.status_code}")
+    
+    # Generate Quotes section
+    if saved.get("itinerary_data") or saved.get("ticket_data"):
+        st.divider()
+        
+        if st.button("Generate Insurance Quotes", use_container_width=True, type="primary"):
+            with st.spinner("Analyzing your trip and generating recommendations..."):
+                # Merge data
+                merged_trip = _merge_trip_data(
+                    saved.get("itinerary_data", {}),
+                    saved.get("ticket_data", {})
+                )
+                
+                # Generate quotes via API
+                resp = requests.post(
+                    f"{api_base}/generate_quotes",
+                    json={"trip_data": merged_trip},
+                    timeout=120,
+                )
+                
+                if resp.status_code == 200:
+                    result = resp.json()
+                    if result.get("ok"):
+                        saved["trip"] = result.get("trip", merged_trip)
+                        saved["quotes"] = result.get("quotes", [])
+                        saved["recommended_plan"] = result.get("recommended_plan", "")
+                        _save_payload(sid, saved)
+                        st.success("Insurance recommendations ready!")
+                        st.rerun()
+                    else:
+                        st.error(f"Quote generation failed: {result.get('error', 'Unknown error')}")
+                else:
+                    st.error(f"API error: {resp.status_code}")
+    
+    # Display saved information and quotes
+    if saved.get("trip") and saved.get("quotes"):
+        st.divider()
+        _render_trip_summary(saved["trip"])
+        _render_quotes(saved.get("quotes", []), saved.get("recommended_plan", ""))
 
-    if resp.status_code != 200:
-        st.error(f"Server error: {resp.status_code}")
-        return
-
-    data = resp.json()
-    if not data.get("ok"):
-        st.error(f"Upload failed: {data.get('error', 'Unknown error')}")
-        return
-
-    st.success(f"Uploaded {data['filename']}")
-    st.code(data["path"])
-
-    trip = data.get("trip", {})
-    quotes = [
-        {"plan": "TravelEasy QTD032212", "medical": "$100,000", "cancellation": "$5,000",
-         "price": "$42.50", "link": "data/samples/TravelEasy Policy QTD032212.pdf"},
-        {"plan": "TravelEasy Pre-Ex QTD032212-PX", "medical": "$100,000 (Pre-Existing)",
-         "cancellation": "$4,000", "price": "$49.90",
-         "link": "data/samples/TravelEasy Pre-Ex Policy QTD032212-PX.pdf"},
-        {"plan": "Scootsurance QSR022206", "medical": "$80,000", "cancellation": "$3,000",
-         "price": "$38.00", "link": "data/samples/Scootsurance QSR022206_updated.pdf"},
-    ]
-    try:
-        tc = float(trip.get("trip_cost", 0) or 0)
-    except Exception:
-        tc = 0.0
-    recommended = "Scootsurance QSR022206" if tc < 3000 else "TravelEasy QTD032212"
-
-    _save_payload(
-        sid,
-        {
-            "trip": trip,
-            "quotes": quotes,
-            "recommended_plan": recommended,
-            "filename": data.get("filename"),
-            "path": data.get("path"),
-        },
-    )
-
-    # Show results for this upload
-    _render_trip_summary(trip)
-    _render_quotes(quotes, recommended)
-
-    # >>> Restored: Proceed to Quote button for fresh uploads <<<
-    if st.button("Proceed to Quote ➜", use_container_width=True, type="primary", key="proceed_after_upload"):
-        st.info(f"Next step: Quote generation for {recommended} (mock flow).")
-
-    # Switch to stored mode and rerun so future refreshes show the stored file panel
-    st.session_state.upload_panel_mode = "stored"
-    st.rerun()

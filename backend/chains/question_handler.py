@@ -25,7 +25,7 @@ def handle_question(question: str) -> str:
         elif "trip" in q or "cancel" in q:
             return compare_policies(travel, scoot, "trip_cancellation")
         else:
-            return "🤔 I can compare benefits like medical coverage or trip cancellation — which one?"
+            return "I can compare benefits like medical coverage or trip cancellation — which one?"
 
     elif any(k in q for k in ["mean", "explain", "what is"]):
         # Explanation
@@ -43,4 +43,4 @@ def handle_question(question: str) -> str:
         return scenario_coverage(travel, q)
 
     else:
-        return "💬 I can compare plans, explain benefits, or check coverage. Try asking about 'trip cancellation' or 'medical coverage'."
+        return "I can compare plans, explain benefits, or check coverage. Try asking about 'trip cancellation' or 'medical coverage'."

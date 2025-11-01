@@ -42,7 +42,7 @@ def compare_policies(policy_a: dict, policy_b: dict, keyword: str) -> str:
     products = policy_a.get("products", [])
     
     if len(products) < 2:
-        return f"💬 Comparing '{keyword}' coverage. Please refer to the policy documents for detailed information."
+        return f"Comparing '{keyword}' coverage. Please refer to the policy documents for detailed information."
     
     # Get the first two products for comparison (or you can pass product indices)
     product_a_name = products[0]
@@ -60,7 +60,7 @@ def compare_policies(policy_a: dict, policy_b: dict, keyword: str) -> str:
             break
     
     if not matching_benefit:
-        return f"💬 Coverage information for '{keyword}' is available in the policy documents. Please check the PDFs."
+        return f"Coverage information for '{keyword}' is available in the policy documents. Please check the PDFs."
     
     # Extract product-specific data
     info_a = matching_benefit.get("products", {}).get(product_a_name, {})
@@ -71,8 +71,8 @@ def compare_policies(policy_a: dict, policy_b: dict, keyword: str) -> str:
     
     # Build comparison
     result = f"### Comparison: {matching_benefit.get('benefit_name', keyword)}\n\n"
-    result += f"**{product_a_name}**: {'✅ Covered' if exists_a else '❌ Not covered'}\n"
-    result += f"**{product_b_name}**: {'✅ Covered' if exists_b else '❌ Not covered'}\n"
+    result += f"**{product_a_name}**: {'Covered' if exists_a else 'Not covered'}\n"
+    result += f"**{product_b_name}**: {'Covered' if exists_b else 'Not covered'}\n"
     
     return result
 
@@ -91,9 +91,9 @@ def explain_section(policy: dict, keyword: str) -> str:
         benefit_name = benefit.get("benefit_name", "").lower()
         if keyword in benefit_name:
             benefit_name_display = benefit.get('benefit_name', keyword).replace('_', ' ').title()
-            return f"💡 **{benefit_name_display}** — This benefit is available across all products. Please check the policy documents for specific limits and conditions."
+            return f"**{benefit_name_display}** — This benefit is available across all products. Please check the policy documents for specific limits and conditions."
     
-    return f"💬 Information about '{keyword}' is available in the policy documents. Please check the PDFs for details."
+    return f"Information about '{keyword}' is available in the policy documents. Please check the PDFs for details."
 
 
 # ----------------------------------------------------------------------
@@ -111,9 +111,9 @@ def check_eligibility(policy: dict, condition: str) -> str:
         if condition_lower in cond_name:
             cond_display = cond.get('condition', condition).replace('_', ' ').title()
             cond_type = cond.get('condition_type', 'condition')
-            return f"✅ **{cond_display}** ({cond_type}) — Please check the policy documents for specific eligibility requirements."
+            return f"**{cond_display}** ({cond_type}) — Please check the policy documents for specific eligibility requirements."
     
-    return f"💬 Please check the policy documents for '{condition}' eligibility details."
+    return f"Please check the policy documents for '{condition}' eligibility details."
 
 
 # ----------------------------------------------------------------------
@@ -146,7 +146,7 @@ def scenario_coverage(policy: dict, user_scenario: str) -> str:
     result = explain_section(policy, user_scenario)
     if "Information about" in result or "available in" in result:
         return result
-    return "💬 Coverage details for your scenario are in the policy documents. Please review the PDFs."
+    return "Coverage details for your scenario are in the policy documents. Please review the PDFs."
 
 
 # ----------------------------------------------------------------------
@@ -154,7 +154,7 @@ def scenario_coverage(policy: dict, user_scenario: str) -> str:
 # ----------------------------------------------------------------------
 if __name__ == "__main__":
     policies = load_all_policies()
-    print(f"✅ Loaded: {list(policies.keys())}")
+    print(f"Loaded: {list(policies.keys())}")
 
     print(compare_policies(
         policies["TravelEasy Policy QTD032212"],

@@ -97,6 +97,17 @@ MSIG_CSS = """
   color: #FFFFFF !important;
 }
 
+/* File uploader remove/cancel button - make it RED and visible */
+button[aria-label*="Remove"],
+button[aria-label*="Remove"] *,
+[data-testid="stFileUploader"] button[aria-label*="Remove"],
+[data-testid="stFileUploader"] button[aria-label*="Remove"] *,
+[data-testid="stFileUploader"] [role="button"]:has(svg[viewBox="0 0 16 16"]){
+  background:var(--msig-red) !important;
+  border-color:var(--msig-red) !important;
+  color:#FFFFFF !important;
+}
+
 /* ===== MAIN: chat panels white with black text; BOT outlined red ===== */
 [data-testid="stAppViewContainer"] .main [data-testid="stChatMessage"]{
   background:#FFFFFF !important;
@@ -216,8 +227,6 @@ if "messages" not in st.session_state:
 # Sidebar — Upload Panel
 # ===========================
 with st.sidebar:
-  st.header("Upload Travel Document")
-  st.caption("Upload your ticket or itinerary (PDF or image). We will summarize and suggest the best plan.")
   render_upload_panel(API_BASE)
 
 # ===========================
