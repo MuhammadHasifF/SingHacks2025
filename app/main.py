@@ -125,19 +125,58 @@ MSIG_CSS = """
 st.set_page_config(page_title="MSIG Travel Assistant", layout="wide")
 st.markdown(f"<style>{MSIG_CSS}</style>", unsafe_allow_html=True)
 
-# Title block
+# ===========================
+# Title block and intro guide
+# ===========================
 st.markdown(
     """
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
         <div style="width:10px;height:28px;background:#E4002B;border-radius:6px;"></div>
         <h1 style="margin:0;">MSIG Travel Assistant</h1>
     </div>
-    <p style="margin-top:-6px;">
-        Compare plans, check eligibility, and get quick answers.
+    """,
+    unsafe_allow_html=True,
+)
+
+st.markdown(
+    """
+    <p style='font-size:16px;color:#cccccc;margin-top:-8px;'>
+        Compare plans, check eligibility, and get quick, personalized guidance.
     </p>
     """,
     unsafe_allow_html=True,
 )
+
+st.divider()
+
+st.markdown(
+    """
+    **How to use the assistant**
+
+    You can talk to me like a real travel advisor. I’ll adapt to your tone and situation — whether you’re unsure, in a rush, or ready to choose a plan.  
+    Try starting with questions like:
+
+    | Situation | Example prompt |
+    |------------|----------------|
+    | Unsure where to start | “I’m not sure which travel insurance I need.” |
+    | In a rush | “My flight is tomorrow — which plan can I buy right now?” |
+    | Health concerns | “I have asthma — am I still eligible for coverage?” |
+    | Trip planning | “Compare MSIG TravelEasy and Scootsurance for a trip to Japan.” |
+    | Confused about terms | “What does trip cancellation really mean?” |
+    | Budget-focused | “Which plan gives good medical coverage but is affordable?” |
+    | Decision-ready | “Tell me the best plan for my trip, and I’ll go with that.” |
+
+    I can also help you:
+    - Compare coverage between plans  
+    - Explain specific policy terms  
+    - Suggest the right plan for your travel type  
+    - Check eligibility for pre-existing conditions  
+    - Summarize uploaded travel documents  
+
+    *(Tip: Be as natural or as specific as you like — I’ll adjust my tone automatically.)*
+    """,
+)
+
 
 # ===========================
 # Tiny on-disk session store (for chat persistence)
