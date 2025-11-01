@@ -7,7 +7,7 @@ Appends clickable Markdown PDF citation links for insurance policy documents.
 import os
 
 # Base folder containing your PDFs
-PDF_BASE_PATH = "data/samples"
+PDF_BASE_PATH = "data/Policy_Wordings"
 
 # Mapping: internal policy name → actual file path
 PDF_LINKS = {

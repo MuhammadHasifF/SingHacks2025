@@ -16,23 +16,23 @@ def handle_question(question: str) -> str:
     q = question.lower()
     policies = load_all_policies()
     travel = policies["TravelEasy Policy QTD032212"]
-    scoot = policies["Scootsurance QSR022206"]
+    scoot = policies["Scootsurance QSR022206_updated"]
 
     if any(k in q for k in ["compare", "better", "vs", "difference"]):
         # Comparison logic
         if "medical" in q:
-            return compare_policies(travel, scoot, "Trip Cancellation due to COVID-19")
+            return compare_policies(travel, scoot, "overseas_medical_expenses")
         elif "trip" in q or "cancel" in q:
-            return compare_policies(travel, scoot, "Trip Cancellation due to COVID-19")
+            return compare_policies(travel, scoot, "trip_cancellation")
         else:
             return "🤔 I can compare benefits like medical coverage or trip cancellation — which one?"
 
     elif any(k in q for k in ["mean", "explain", "what is"]):
         # Explanation
         if "trip" in q or "cancel" in q:
-            return explain_section(scoot, "Trip Cancellation due to COVID-19")
+            return explain_section(scoot, "trip_cancellation")
         else:
-            return explain_section(travel, "Overseas medical expenses")
+            return explain_section(travel, "overseas_medical")
 
     elif any(k in q for k in ["cover", "covered", "eligibility", "pre-existing"]):
         # Eligibility

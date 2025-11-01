@@ -17,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.chains.conversational_agent import create_insurance_agent
 from backend.chains.response_formatter import format_response
 from backend.chains.intent import detect_intent
+from pydantic import BaseModel
 
 # ---------------------------------------------------------------------------- #
 # ⚙️ FastAPI Initialization
@@ -177,3 +178,18 @@ async def upload_and_extract(file: UploadFile = File(...)):
 
     except Exception as e:
         return {"ok": False, "error": str(e)}
+
+class DeleteReq(BaseModel):
+    path: str
+
+@app.post("/delete_upload")
+async def delete_upload(req: DeleteReq):
+    try:
+        if not req.path:
+            return {"ok": False, "error": "no path"}
+        if os.path.exists(req.path):
+            os.remove(req.path)
+        return {"ok": True}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
+
