@@ -10,3 +10,4 @@ pytesseract
 requests
 python-dotenv
 langchain_community
+pymupdf
