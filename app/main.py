@@ -9,15 +9,15 @@ from components.upload_panel import render_upload_panel
 API_BASE = "http://127.0.0.1:8000"
 CHAT_URL = f"{API_BASE}/chat"
 
-st.set_page_config(page_title="Insurance Scammer 🧳", page_icon="💬")
-st.title("🧳 Insurance Scammer")
+st.set_page_config(page_title="Insurance Scammer 🧳", page_icon="💬", layout="wide")
+st.title("🧳 Insurance Scammer — MSIG x Scootsurance Assistant")
 
 # ===========================
-# Sidebar — File Upload
+# Sidebar — Upload Panel
 # ===========================
 with st.sidebar:
-    st.header("📎 Document Upload")
-    st.caption("Upload a PDF or image (stored locally in `data/uploads/`).")
+    st.header("📎 Upload Travel Document")
+    st.caption("Upload your ticket or itinerary (PDF or image). We'll summarize and suggest the best plan.")
     render_upload_panel(API_BASE)
 
 # ===========================
@@ -29,15 +29,15 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 # ===========================
-# Display chat history
+# Chat Section
 # ===========================
+st.subheader("💬 Chat with Insurance Scammer")
+st.caption("Ask questions like *Which plan has better coverage?* or *Am I covered for skiing in Japan?*")
+
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"], unsafe_allow_html=True)
 
-# ===========================
-# Chat Input & Response
-# ===========================
 if prompt := st.chat_input("Ask about trip cancellation, medical coverage, eligibility…"):
     # User message
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -55,13 +55,8 @@ if prompt := st.chat_input("Ask about trip cancellation, medical coverage, eligi
                 )
                 data = resp.json()
                 text = data.get("text", "No response.")
-
-                # Assistant message (markdown supports links)
                 st.markdown(text, unsafe_allow_html=True)
-
-                # Store in chat history
                 st.session_state.messages.append({"role": "assistant", "content": text})
-
             except Exception as e:
                 err = f"API error: {e}"
                 st.error(err)
