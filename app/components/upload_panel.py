@@ -63,6 +63,7 @@ def _render_quotes(quotes: list[dict], recommended_plan: str):
         )
     st.divider()
     price = next((q["price"] for q in quotes if q["plan"] == recommended_plan), "—")
+    # Keep Streamlit's green success highlight for the recommended plan
     st.success(f"Recommended Plan: {recommended_plan} ({price})")
 
 
@@ -101,7 +102,7 @@ def render_upload_panel(api_base: str):
 
             # Reuse: rerun extraction without asking user to upload again
             with col1:
-                if st.button("Reuse this file", use_container_width=True):
+                if st.button("Reuse this file", use_container_width=True, type="primary"):
                     try:
                         with open(saved_path, "rb") as f:
                             resp = requests.post(
@@ -160,7 +161,7 @@ def render_upload_panel(api_base: str):
 
             # Replace -> switch to uploader mode
             with col3:
-                if st.button("Replace file", use_container_width=True):
+                if st.button("Replace file", use_container_width=True, type="primary"):
                     st.session_state.upload_panel_mode = "upload"
                     st.rerun()
 
@@ -186,6 +187,10 @@ def render_upload_panel(api_base: str):
         _render_trip_summary(trip)
         if quotes and recommended:
             _render_quotes(quotes, recommended)
+
+        # >>> Restored: Proceed to Quote button <<<
+        if st.button("Proceed to Quote ➜", use_container_width=True, type="primary"):
+            st.info(f"Next step: Quote generation for {recommended} (mock flow).")
         return
 
     # -------- Uploader view --------
@@ -200,9 +205,13 @@ def render_upload_panel(api_base: str):
                 _render_trip_summary(trip)
                 if quotes and recommended:
                     _render_quotes(quotes, recommended)
+
+                # >>> Restored: Proceed to Quote button (when viewing saved details in expander) <<<
+                if quotes and recommended and st.button("Proceed to Quote ➜", use_container_width=True, type="primary", key="proceed_expander"):
+                    st.info(f"Next step: Quote generation for {recommended} (mock flow).")
         return
 
-    with st.spinner("Uploading and extracting…"):
+    with st.spinner("Uploading and extracting..."):
         resp = requests.post(
             f"{api_base}/upload_extract",
             files={"file": (file.name, file, file.type)},
@@ -248,6 +257,14 @@ def render_upload_panel(api_base: str):
         },
     )
 
-    # Switch to stored mode and rerun so the panel updates immediately
+    # Show results for this upload
+    _render_trip_summary(trip)
+    _render_quotes(quotes, recommended)
+
+    # >>> Restored: Proceed to Quote button for fresh uploads <<<
+    if st.button("Proceed to Quote ➜", use_container_width=True, type="primary", key="proceed_after_upload"):
+        st.info(f"Next step: Quote generation for {recommended} (mock flow).")
+
+    # Switch to stored mode and rerun so future refreshes show the stored file panel
     st.session_state.upload_panel_mode = "stored"
     st.rerun()
