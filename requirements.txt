@@ -9,3 +9,4 @@ pillow
 pytesseract
 requests
 python-dotenv
+PyPDF2

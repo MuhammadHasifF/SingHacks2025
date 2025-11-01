@@ -1,5 +1,11 @@
 # test_db.py
 import chromadb
+from backend.ingestion.parse_pdf import ingest_documents
+
+# Trigger the ingestion process before connecting to ChromaDB
+print("Starting the ingestion process...")
+ingest_documents()
+print("Ingestion process completed.")
 
 print("Connecting to existing ChromaDB...")
 client = chromadb.PersistentClient(path="./storage/chroma_db")

@@ -1,42 +1,77 @@
 # ingest.py
-# This script loads PDFs using LlamaIndex and indexes them in ChromaDB.
+# This script loads PDFs using LlamaIndex and indexes them.
 
 from llama_index.core import SimpleDirectoryReader, VectorStoreIndex
-# NEW, CORRECT line
-from llama_index.vector_stores.chroma import ChromaVectorStore
-from llama_index.core import StorageContext
+from llama_index.llms.groq import Groq
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+import json
 import chromadb
 
-# --- 1. LOAD AND PARSE DATA ---
+# --- 1. CONFIGURE LLM AND EMBEDDING ---
+llm = Groq(model="llama-3.3-70b-versatile", temperature=0.3)
+embedding_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
 
-# Point this to the folder containing your PDF files
-pdf_folder_path = "./data/samples" 
-
+# --- 2. PARSE PDF FILES ---
+pdf_folder_path = "./data/samples"
 print(f"Loading documents from {pdf_folder_path}...")
 
-# This is the LlamaIndex way. It will automatically find
-# pypdf, open all .pdf files, and extract the text.
-reader = SimpleDirectoryReader(input_dir=pdf_folder_path)
-documents = reader.load_data()
+# Use SimpleDirectoryReader to parse PDFs
+documents = SimpleDirectoryReader(pdf_folder_path).load_data()
 
-print(f"Successfully loaded {len(documents)} document(s).")
-if documents:
-    print(f"Example document source: {documents[0].metadata.get('file_name')}")
+# --- 3. INDEX DOCUMENTS ---
+print("Indexing documents...")
+vector_store = VectorStoreIndex.from_documents(documents, llm=llm, embed_model=embedding_model)
 
-# --- 2. SET UP STORAGE AND INDEX ---
+# --- 4. SAVE ALL DOCUMENTS AS A SINGLE JSON FILE ---
+# Specify the output file for the combined JSON
+combined_json_file_path = "./data/processed/non_normalized_parsed_pdf.json"
 
-# Set up ChromaDB (using libraries from your requirements.txt)
-db = chromadb.PersistentClient(path="./chroma_db")
-chroma_collection = db.get_or_create_collection("policy_docs")
-vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
-storage_context = StorageContext.from_defaults(vector_store=vector_store)
+print(f"Saving all extracted documents to {combined_json_file_path}...")
 
-# 3. Create the index
-# The 'documents' variable from SimpleDirectoryReader goes right in.
-print("Indexing documents in ChromaDB...")
-index = VectorStoreIndex.from_documents(
-    documents, 
-    storage_context=storage_context
-)
+# Combine all documents into a single JSON structure
+combined_json_data = []
+for doc in documents:
+    combined_json_data.append({
+        "content": doc.text,
+        "metadata": doc.metadata,
+    })
 
-print("✅ All documents successfully parsed and indexed!")
+# Save the combined JSON data to a single file
+with open(combined_json_file_path, "w", encoding="utf-8") as combined_json_file:
+    json.dump(combined_json_data, combined_json_file, ensure_ascii=False, indent=4)
+
+print(f"✅ All documents saved to {combined_json_file_path}")
+
+# --- 5. SAVE TO CHROMADB ---
+# print("Saving documents to ChromaDB...")
+
+# # Initialize ChromaDB client
+# chroma_client = chromadb.PersistentClient(path="./storage/chroma_db")
+
+# # Create or get the collection
+# collection_name = "policy_docs"
+# if not chroma_client.has_collection(collection_name):
+#     chroma_collection = chroma_client.create_collection(name=collection_name)
+# else:
+#     chroma_collection = chroma_client.get_collection(name=collection_name)
+
+# # Add documents to the collection
+# for doc in documents:
+#     chroma_collection.add(
+#         documents=[doc.text],
+#         metadatas=[doc.metadata],
+#         ids=[doc.metadata.get("file_name", "unknown")]
+#     )
+
+# print("✅ Documents successfully saved to ChromaDB.")
+
+# --- 6. PRINT JSON FORMAT IN CONSOLE ---
+print("\nDisplaying extracted documents in JSON format:")
+for i, doc in enumerate(documents):
+    json_data = {
+        "content": doc.text,
+        "metadata": doc.metadata,
+    }
+    print(f"Document {i + 1}:")
+    print(json.dumps(json_data, ensure_ascii=False, indent=4))
+    print("\n---\n")
