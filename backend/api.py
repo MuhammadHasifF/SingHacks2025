@@ -2,9 +2,10 @@
 backend/api.py
 --------------
 FastAPI bridge for the frontend. Exposes:
-  - POST /chat            (chatbot messages)
-  - POST /upload          (raw file upload)
-  - POST /upload_extract  (mock extraction summary)
+  - GET  /health
+  - POST /chat
+  - POST /upload
+  - POST /upload_extract
 """
 
 from fastapi import FastAPI, Request, UploadFile, File, HTTPException
@@ -12,11 +13,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import os
 
-# 🧠 Import internal modules
+# 🧠 Internal modules
 from backend.chains.conversational_agent import create_insurance_agent
 from backend.chains.response_formatter import format_response
 from backend.chains.intent import detect_intent
-from backend.ingestion.parse_pdf import extract_trip_info
+from pydantic import BaseModel
 
 
 import stripe
@@ -34,28 +35,47 @@ from typing import Dict, Any
 # ---------------------------------------------------------------------------- #
 # ⚙️ FastAPI Initialization
 # ---------------------------------------------------------------------------- #
-app = FastAPI(title="Insurance Scammer API", version="1.0")
+app = FastAPI(title="Insurance Scammer API", version="1.1")
 
-# CORS (for Streamlit localhost)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # you can restrict later
+    allow_origins=["*"],  # tighten later
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+DEBUG = os.getenv("DEBUG", "0") == "1"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+
+@app.get("/health")
+def health():
+    return {
+        "ok": True,
+        "groq_key_set": bool(GROQ_API_KEY),
+    }
+
 # ---------------------------------------------------------------------------- #
 # 🤖 Chatbot Endpoint (/chat)
 # ---------------------------------------------------------------------------- #
-agent = create_insurance_agent()  # in-memory singleton
+agent = create_insurance_agent()  # singleton in-memory
+
+def _classify_error_message(err: str) -> str:
+    low = err.lower()
+    if "invalid api key" in low or "invalid_api_key" in low or "401" in low:
+        return "Authentication failed: invalid API key. Check GROQ_API_KEY on the server."
+    if "request too large" in low or "tpm" in low or "413" in low or "tokens per minute" in low:
+        return "Request exceeded the model's token/context limit. Reduce PDF chunk size or shorten input."
+    if "connection" in low or "timeout" in low or "dns" in low or "failed to establish" in low:
+        return "Cannot reach the LLM server. Check network or Groq availability."
+    return "Sorry, I ran into an error processing that. Please try again."
 
 @app.post("/chat")
 async def chat(request: Request):
     """Handle user chatbot questions."""
     payload = await request.json()
-    question = payload.get("question", "").strip()
-    session_id = payload.get("session_id", "default")
+    question = (payload.get("question") or "").strip()
+    session_id = payload.get("session_id") or "default"
 
     if not question:
         return format_response(
@@ -63,6 +83,15 @@ async def chat(request: Request):
             session_id=session_id,
             intent="general",
             citations=[],
+        )
+
+    if not GROQ_API_KEY:
+        return format_response(
+            text="Server misconfiguration: GROQ_API_KEY is missing.",
+            session_id=session_id,
+            intent="error",
+            citations=[],
+            meta={"error": "GROQ_API_KEY not set"},
         )
 
     try:
@@ -82,12 +111,20 @@ async def chat(request: Request):
         )
 
     except Exception as e:
+        err = str(e)
+        user_msg = _classify_error_message(err)
+
+        # Small traceback tail for dev visibility
+        tb_tail = ""
+        if DEBUG:
+            tb_tail = "".join(traceback.format_exc()[-800:])  # last ~800 chars
+
         return format_response(
-            text="Sorry, I ran into an error processing that. Please try again.",
+            text=user_msg,
             session_id=session_id,
             intent="error",
             citations=[],
-            meta={"error": str(e)},
+            meta={"error": err, "detail": tb_tail},
         )
 
 # ---------------------------------------------------------------------------- #
@@ -98,31 +135,21 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
-    """
-    Upload a PDF or image file.
-    Saves the file to /data/uploads (temporary storage).
-    """
     try:
         file_path = os.path.join(UPLOAD_DIR, file.filename)
         with open(file_path, "wb") as f:
             f.write(await file.read())
-
         return {"ok": True, "filename": file.filename, "path": file_path}
     except Exception as e:
         return {"ok": False, "error": str(e)}
 
 @app.post("/upload_extract")
 async def upload_and_extract(file: UploadFile = File(...)):
-    """
-    Save uploaded PDF or image and return a mock trip + quote summary.
-    Later this will use real OCR + plan logic.
-    """
     try:
         save_path = os.path.join(UPLOAD_DIR, file.filename)
         with open(save_path, "wb") as f:
             f.write(await file.read())
 
-        # 🧠 Mock trip info (pretend extracted)
         trip = {
             "traveler_name": "John Doe",
             "destination": "Japan",
@@ -130,7 +157,6 @@ async def upload_and_extract(file: UploadFile = File(...)):
             "trip_cost": 2500,
         }
 
-        # 💸 Mock quote summary (using your 3 policies)
         quotes = [
             {
                 "plan": "TravelEasy QTD032212",
@@ -272,6 +298,20 @@ async def check_payment_status(payment_intent_id):
     except Exception as e:
         print(f"Failed to check payment status: {e}")
         return None
+
+class DeleteReq(BaseModel):
+    path: str
+
+@app.post("/delete_upload")
+async def delete_upload(req: DeleteReq):
+    try:
+        if not req.path:
+            return {"ok": False, "error": "no path"}
+        if os.path.exists(req.path):
+            os.remove(req.path)
+        return {"ok": True}
+    except Exception as e:
+        return {"ok": False, "error": str(e)}
 
 # @app.get('/payment-status/{session_id}')
 async def check_stripe_payment_status(session_id):

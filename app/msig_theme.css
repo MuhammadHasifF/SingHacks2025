@@ -1,0 +1,72 @@
+/* ---- MSIG brand palette ---- */
+:root{
+    --msig-red:#E4002B;
+    --msig-navy:#1F2A5A;
+    --msig-navy-dark:#151B3A;
+    --msig-navy-light:#2A3A74;
+    --off-white:#F6F7FB;
+    --gray-200:#E9ECF5;
+    --gray-500:#8B93A6;
+  }
+  
+  /* App header strip (subtle brand touch) */
+  header .stAppHeader{
+    background:#FFFFFF !important;
+    border-bottom:3px solid var(--msig-red);
+  }
+  
+  /* Page container spacing */
+  .stAppViewContainer, .main .block-container{ padding-top:1.2rem; }
+  
+  /* Headings / links */
+  h1,h2,h3{ color:var(--msig-navy) !important; letter-spacing:.2px; }
+  a, .stMarkdown a{ color:var(--msig-navy-light) !important; }
+  a:hover{ color:var(--msig-red) !important; }
+  
+  /* Buttons */
+  .stButton > button{
+    background:var(--msig-red) !important;
+    color:#FFFFFF !important;
+    border:0 !important;
+    border-radius:12px !important;
+    box-shadow:0 6px 14px rgba(228,0,43,.18);
+  }
+  .stButton > button:hover{ filter:brightness(1.05); }
+  
+  /* Sidebar uploader card style */
+  [data-testid="stSidebar"] [data-testid="stFileUploader"] > section{
+    border:2px dashed var(--gray-200) !important;
+    background:var(--off-white) !important;
+    border-radius:16px !important;
+  }
+  
+  /* Containers / tables */
+  .st-cx, .stDataFrame, .stTable{ border:1px solid var(--gray-200); border-radius:12px; }
+  
+  /* Chat bubbles */
+  [data-testid="stChatMessage"]{
+    border-radius:14px !important;
+    border:1px solid var(--gray-200);
+    background:#FFFFFF;
+  }
+  [data-testid="stChatMessage"]:has([data-testid="user-avatar"]){
+    border-left:4px solid var(--msig-red);
+  }
+  [data-testid="stChatMessage"]:has([data-testid="assistant-avatar"]){
+    border-left:4px solid var(--msig-navy);
+  }
+  
+  /* Chat input */
+  [data-testid="stChatInput"] textarea{
+    border-radius:12px !important;
+    border:1.5px solid var(--gray-200) !important;
+  }
+  [data-testid="stChatInput"] button{
+    background:var(--msig-red) !important;
+    color:#FFFFFF !important;
+    border-radius:12px !important;
+  }
+  
+  /* Success/info messages – tone them to brand navy */
+  .stAlert > div{ color:var(--msig-navy); }
+  

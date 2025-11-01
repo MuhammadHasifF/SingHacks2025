@@ -1,6 +1,7 @@
 """
 LangChain (1.x) conversational agent using Groq + RunnableWithMessageHistory.
 Strictly grounded to real insurance data (MSIG TravelEasy, Pre-Ex, Scootsurance).
+Enhanced for sales-aware behaviour: adapts to user tone, urgency, mindset, and decision stage.
 """
 
 import os
@@ -10,7 +11,7 @@ from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.chat_history import InMemoryChatMessageHistory
-from langchain_core.runnables import RunnableWithMessageHistory
+from langchain_core.runnables.history import RunnableWithMessageHistory
 
 # 🧠 Import Hasif Logic Modules
 from backend.chains.question_handler import handle_question
@@ -20,47 +21,46 @@ load_dotenv()
 
 
 def create_insurance_agent():
-    """
-    Travel Insurance Chat Agent:
-      ✅ Uses Groq (LangChain)
-      ✅ Keeps per-session memory
-      ✅ Handles comparison, explanation, eligibility, scenarios
-      ✅ Cites real policy sources
-      🚫 Never references non-MSISG / Scootsurance products
-    """
+    """Creates a psychologically adaptive, sales-aware travel insurance chatbot."""
 
-    # 1️⃣ Initialize Groq LLM
+    # 1️⃣ Initialize Groq LLM (LangChain)
     llm = ChatGroq(
         model="llama-3.3-70b-versatile",
-        temperature=0.2,
+        temperature=0.5,
         groq_api_key=os.getenv("GROQ_API_KEY"),
     )
 
-    # 2️⃣ Define a strict prompt
+    # 2️⃣ Define adaptive sales + psychology prompt
     system_prompt = (
-        "You are **Insurance Scammer**, an MSIG x Scootsurance insurance expert. "
-        "Your only knowledge sources are the following three policies:\n"
+        "You are **Insurance Scammer**, an MSIG x Scootsurance insurance advisor. "
+        "You only know these policy documents:\n"
         "- TravelEasy Policy QTD032212\n"
         "- TravelEasy Pre-Ex Policy QTD032212-PX\n"
         "- Scootsurance QSR022206\n\n"
-        "❗ You must never mention or recommend other insurance brands or providers. "
-        "When comparing or explaining, always base your response strictly on these documents. "
-        "If a user asks for a suggestion, describe which of these 3 plans best fits their need. "
-        "Be clear, factual, and concise."
+        "Be factual and concise, but adapt tone based on the user’s emotional and decision state. "
+        "Apply human psychology and ethical sales communication principles to build trust and clarity.\n\n"
+        "Tone adaptation rules:\n"
+        "• Unsure/Hesitant → Be warm, reassure, ask clarifying questions.\n"
+        "• Confused → Simplify terms, use analogies, and confirm understanding.\n"
+        "• Angry/Frustrated → Acknowledge emotion, apologise, clarify facts calmly.\n"
+        "• Urgent → Give concise next steps first, then context.\n"
+        "• Ready to Buy → Be assertive, summarise benefits, reinforce choice confidence.\n"
+        "• Exploratory → Be engaging, share interesting plan highlights.\n"
+        "• Cautious → Reassure, mention coverage details, mitigate perceived risks.\n\n"
+        "Always stay polite, friendly, confident, and empathetic. "
+        "End every answer by offering a next helpful step (e.g., 'Would you like to compare plans side by side?')."
     )
 
-    prompt = ChatPromptTemplate.from_messages(
-        [
-            ("system", system_prompt),
-            MessagesPlaceholder(variable_name="history"),
-            ("human", "{question}"),
-        ]
-    )
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        MessagesPlaceholder(variable_name="history"),
+        ("human", "{question}")
+    ])
 
-    # 3️⃣ Build the LangChain pipeline
+    # 3️⃣ Chain construction (LLM + output parser)
     chain = prompt | llm | StrOutputParser()
 
-    # 4️⃣ Memory setup
+    # 4️⃣ Conversation memory
     store: dict[str, InMemoryChatMessageHistory] = {}
 
     def _get_history(session_id: str) -> InMemoryChatMessageHistory:
@@ -69,37 +69,58 @@ def create_insurance_agent():
         return store[session_id]
 
     chat = RunnableWithMessageHistory(
-        chain,
-        lambda session_id: _get_history(session_id),
+        chain.with_config(run_name="chat"),
+        get_session_history=_get_history,
         input_messages_key="question",
         history_messages_key="history",
     )
 
-    # 5️⃣ Main function
+    # 5️⃣ Main conversational method
     def ask(session_id: str, question: str) -> str:
         """
         Handles:
-          - Intent routing via Hasif's backend logic
-          - LLM phrasing (strictly grounded to JSON)
-          - Adds citations
+          - Intent routing via Hasif’s backend logic
+          - Behaviour-aware tone detection
+          - LLM phrasing grounded to real JSON data
+          - Adds citations to PDFs
         """
-        # Step 1 — Route question through logic
-        routed_answer = handle_question(question)
 
-        # Step 2 — Feed both question + routed logic to Groq
+        routed_answer = handle_question(question)
+        q_lower = question.lower()
+
+        # Behaviour/tone classification
+        if any(k in q_lower for k in ["not sure", "don’t know", "maybe", "which", "help me decide"]):
+            user_state = "unsure"
+        elif any(k in q_lower for k in ["confused", "don’t understand", "complicated"]):
+            user_state = "confused"
+        elif any(k in q_lower for k in ["angry", "frustrated", "unfair", "why", "hate"]):
+            user_state = "frustrated"
+        elif any(k in q_lower for k in ["quick", "asap", "urgent", "flight soon", "leaving"]):
+            user_state = "urgent"
+        elif any(k in q_lower for k in ["ready", "buy", "decide", "i’ll choose"]):
+            user_state = "ready"
+        elif any(k in q_lower for k in ["what if", "explore", "browsing", "curious"]):
+            user_state = "exploratory"
+        elif any(k in q_lower for k in ["worried", "concerned", "risk", "pre-existing"]):
+            user_state = "cautious"
+        else:
+            user_state = "neutral"
+
+        # Query Groq conversationally
         ai_response = chat.invoke(
             {
                 "question": (
-                    f"User asked: {question}\n"
+                    f"User said: {question}\n"
+                    f"Detected user mindset: {user_state}\n"
                     f"Assistant reasoning (from JSON policies): {routed_answer}\n"
-                    "Generate a clear response using ONLY these policies. "
-                    "If unsure, say 'This information is not specified in the current policy data.'"
+                    "Now respond naturally, applying psychological sales communication, "
+                    "while staying strictly factual and grounded to MSIG/Scootsurance data."
                 )
             },
             config={"configurable": {"session_id": session_id}},
         )
 
-        # Step 3 — Add clickable citation footer (links to real PDF files)
+        # Add clickable citations
         return add_citation(ai_response)
 
     return ask

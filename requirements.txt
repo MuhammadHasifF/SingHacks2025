@@ -9,5 +9,7 @@ pillow
 pytesseract
 requests
 python-dotenv
+langchain_community
+pymupdf
 # langchain_community
 python-multipart
