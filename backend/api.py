@@ -6,15 +6,31 @@ FastAPI bridge for the frontend. Exposes:
   - POST /chat
   - POST /upload
   - POST /upload_extract
+  - POST /payment-intent
+  - POST /stripe-checkout
+  - GET  /payment-status/{payment_intent_id}
+  - POST /webhook/stripe
 """
 
 import os
 import json
 import traceback
+import time
+import uuid
+import logging
 from urllib.parse import quote as urlquote
-from fastapi import FastAPI, Request, UploadFile, File, Form
+from datetime import datetime
+from typing import Dict, Any
+
+from fastapi import FastAPI, Request, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
+from pydantic import BaseModel
+from dotenv import load_dotenv
+
+import stripe
+import boto3
+import requests
 
 # 🧠 Internal modules
 from backend.chains.conversational_agent import create_insurance_agent
@@ -31,7 +47,7 @@ from backend.utils.policy_extractor import (
     calculate_dynamic_price
 )
 from backend.utils.taxonomy_reader import load_policy_coverage
-from pydantic import BaseModel
+
 
 # ---------------------------------------------------------------------------- #
 # ⚙️ FastAPI Initialization
@@ -54,6 +70,9 @@ def health():
     return {
         "ok": True,
         "groq_key_set": bool(GROQ_API_KEY),
+        "stripe_configured": bool(STRIPE_SECRET_KEY),
+        "stripe_api_key_set": bool(stripe.api_key if STRIPE_SECRET_KEY else False),
+        "dynamodb_configured": payments_table is not None,
     }
 
 @app.get("/policy_pdf/{filename}")
@@ -272,6 +291,196 @@ async def generate_quotes(request: Request):
         if DEBUG:
             traceback.print_exc()
         return {"ok": False, "error": str(e)}
+    
+# ---------------------------------------------------------------------------- #
+# Stripe & Payment Configuration
+# ---------------------------------------------------------------------------- #
+
+load_dotenv()
+
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+AWS_REGION = os.getenv("AWS_REGION", "ap-southeast-1")
+DYNAMODB_PAYMENTS_TABLE = os.getenv("DYNAMODB_PAYMENTS_TABLE", "lea-payments-local")
+DDB_ENDPOINT = os.getenv("DDB_ENDPOINT")
+
+if STRIPE_SECRET_KEY:
+    stripe.api_key = STRIPE_SECRET_KEY
+
+# Initialize DynamoDB (optional - payment will work without it)
+payments_table = None
+dynamodb = None
+
+try:
+    # Only initialize DynamoDB if DDB_ENDPOINT is explicitly set (for local DynamoDB)
+    # OR if AWS credentials are available
+    if DDB_ENDPOINT:
+        # Local DynamoDB
+        dynamodb = boto3.resource('dynamodb', region_name=AWS_REGION, endpoint_url=DDB_ENDPOINT)
+        payments_table = dynamodb.Table(DYNAMODB_PAYMENTS_TABLE)
+        try:
+            payments_table.load()
+            print(f"✓ DynamoDB table '{DYNAMODB_PAYMENTS_TABLE}' initialized successfully (Local)")
+        except Exception as load_error:
+            print(f"⚠ Warning: DynamoDB table '{DYNAMODB_PAYMENTS_TABLE}' does not exist or cannot be accessed: {load_error}")
+            print("  Table will be created on first write, or you may need to create it manually.")
+    else:
+        # Don't initialize DynamoDB if DDB_ENDPOINT is not set
+        # This avoids trying to authenticate with AWS when credentials aren't available
+        print("ℹ DynamoDB not initialized: DDB_ENDPOINT not set. Payment will work without database storage.")
+        print("  Set DDB_ENDPOINT for local DynamoDB (e.g., 'http://localhost:8000') if you want database storage.")
+except Exception as e:
+    print(f"⚠ DynamoDB initialization failed: {e}")
+    print("  Payment will work without database storage. This is fine for testing.")
+    payments_table = None
+    dynamodb = None
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("stripe-webhook")
+
+# API to create payment intent
+@app.post("/payment-intent")
+async def create_payment_intent(request: Request):
+    payload = await request.json()
+    payment_intent_id = f"test_payment_{uuid.uuid4().hex[:12]}"
+    user_id = "user_" + str(payload.get("session_user_id", "default"))
+    quote_id = f"quote_{uuid.uuid4().hex[:8]}"
+    amount = payload.get("purchase_amount")
+    product_name = payload.get("product_name")
+
+    # Try to save to DynamoDB if available, but don't fail if it's not configured
+    if payments_table:
+        payment_record = {
+            'payment_intent_id': payment_intent_id,
+            'user_id': user_id,
+            'quote_id': quote_id,
+            'payment_status': 'pending',
+            'amount': amount,
+            'currency': 'SGD',
+            'product_name': product_name,
+            'created_at': datetime.utcnow().isoformat(),
+            'updated_at': datetime.utcnow().isoformat()
+        }
+        
+        try:
+            payments_table.put_item(Item=payment_record)
+            print(f"✓ Payment record created in DynamoDB with ID: {payment_intent_id}")
+        except Exception as e:
+            print(f"⚠ Warning: Failed to create payment record in DynamoDB: {e}")
+            print("  Continuing without database storage (payment will still work)")
+    else:
+        print(f"ℹ Payment intent created (no database): {payment_intent_id}")
+    
+    return {
+        'payment_intent_id': payment_intent_id,
+        'payment_status': 'pending',
+        'user_id': user_id
+    }
+
+
+#API to trigger stripe
+@app.post('/stripe-checkout')
+async def create_stripe_checkout(request: Request):
+    if not STRIPE_SECRET_KEY:
+        error_msg = "Stripe not configured. Please set STRIPE_SECRET_KEY in environment variables."
+        print(f"ERROR: {error_msg}")
+        raise HTTPException(status_code=500, detail=error_msg)
+    
+    # Ensure Stripe API key is set (in case it wasn't set during initialization)
+    if not stripe.api_key:
+        stripe.api_key = STRIPE_SECRET_KEY
+    
+    print("Creating Stripe Checkout Session")
+    payload = await request.json()
+    
+    # Validate required fields
+    purchase_amount = payload.get("purchase_amount")
+    product_name = payload.get("product_name", "Travel Insurance Policy")
+    payment_intent_id = payload.get("payment_intent_id")
+    
+    if not purchase_amount:
+        raise HTTPException(status_code=400, detail="purchase_amount is required")
+    
+    if not isinstance(purchase_amount, int):
+        try:
+            purchase_amount = int(purchase_amount)
+        except (ValueError, TypeError):
+            raise HTTPException(status_code=400, detail=f"Invalid purchase_amount: {purchase_amount}. Must be an integer (amount in cents).")
+
+    try:
+        print(f"Creating checkout for: {product_name}, Amount: {purchase_amount} cents")
+        
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'sgd',
+                    'unit_amount': purchase_amount,
+                    'product_data': {
+                        'name': product_name,
+                        'description': 'Travel Insurance Policy',
+                    },
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=f'http://localhost:8501/?payment_success=true&session_id={{CHECKOUT_SESSION_ID}}',
+            cancel_url='http://localhost:8501/?payment_cancelled=true',
+            client_reference_id=payment_intent_id,
+        )
+        
+        print(f"✓ Stripe Checkout Session created: {checkout_session.id}")
+        print(f"  URL: {checkout_session.url}")
+        
+        # Update DynamoDB if available
+        if payments_table and payment_intent_id:
+            try:
+                payments_table.update_item(
+                    Key={'payment_intent_id': payment_intent_id},
+                    UpdateExpression='SET stripe_session_id = :sid',
+                    ExpressionAttributeValues={':sid': checkout_session.id}
+                )
+                print(f"✓ Updated DynamoDB with session ID")
+            except Exception as db_error:
+                print(f"Warning: Could not update DynamoDB with Stripe session ID: {db_error}")
+        
+        return {
+            "id": checkout_session.id,
+            "url": checkout_session.url,
+            "session_id": checkout_session.id,
+            "checkout_url": checkout_session.url
+        }
+        
+    except stripe.error.StripeError as e:
+        error_msg = f"Stripe API error: {str(e)}"
+        print(f"ERROR: {error_msg}")
+        print(f"  Error type: {type(e).__name__}")
+        if hasattr(e, 'user_message'):
+            print(f"  User message: {e.user_message}")
+        raise HTTPException(status_code=500, detail=error_msg)
+    except Exception as e:
+        error_msg = f"Failed to create Stripe checkout session: {str(e)}"
+        print(f"ERROR: {error_msg}")
+        print(f"  Error type: {type(e).__name__}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=error_msg)
+
+@app.get('/payment-status/{payment_intent_id}')
+async def check_payment_status(payment_intent_id: str):
+    if not payments_table:
+        return JSONResponse(content={'payment_status': 'database_not_configured'}, status_code=503)
+    
+    try:
+        response = payments_table.get_item(Key={'payment_intent_id': payment_intent_id})
+        item = response.get('Item')
+        if item:
+            status = item.get('payment_status', 'unknown')
+            return JSONResponse(content={'payment_status': status})
+        return JSONResponse(content={'payment_status': 'not_found'}, status_code=404)
+    except Exception as e:
+        print(f"Failed to check payment status: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to check payment status: {str(e)}")
 
 class DeleteReq(BaseModel):
     path: str
@@ -287,3 +496,223 @@ async def delete_upload(req: DeleteReq):
     except Exception as e:
         return {"ok": False, "error": str(e)}
 
+# Helper function to check Stripe payment status (synchronous)
+def check_stripe_payment_status_sync(session_id):
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+        return session.payment_status, session
+    except Exception as e:
+        print(f"Failed to check Stripe status: {e}")
+        return None, None
+
+@app.post('/trigger-webhook')
+async def trigger_local_webhook(request: Request):
+    payload = await request.json()
+    print("Triggering local webhook endpoint...")
+    
+    webhook_event = {
+        "type": "checkout.session.completed",
+        "data": {
+            "object": {
+                "id": payload.get("id"),
+                "client_reference_id": payload.get('client_reference_id'),
+                "payment_intent": payload.get('payment_intent'),
+                "payment_status": payload.get('payment_status')
+            }
+        }
+    }
+    
+    try:
+        response = requests.post(
+            "http://localhost:8086/webhook/stripe",
+            json=webhook_event,
+            timeout=5
+        )
+        if response.status_code == 200:
+            print("Webhook triggered successfully")
+            return True
+        else:
+            print(f"Webhook returned status {response.status_code}")
+            return False
+    except Exception as e:
+        print(f"Failed to trigger webhook: {e}")
+        return False
+
+def wait_for_payment_confirmation(payment_intent_id, session_id):
+    """Helper function to poll payment status (synchronous)."""
+    print("Checking payment status on Stripe")
+    print("Polling Stripe API for payment completion...")
+    
+    max_attempts = 30
+    for attempt in range(max_attempts):
+        payment_status, session_data = check_stripe_payment_status_sync(session_id)
+        
+        if payment_status == 'paid':
+            print("Payment confirmed on Stripe!")
+            print(f"Payment Status: {payment_status}")
+            
+            # Note: trigger_local_webhook is async, but this sync function won't be called
+            # from async context. If needed, should be refactored.
+            
+            time.sleep(2)
+            
+            # Check database status directly
+            try:
+                response = payments_table.get_item(Key={'payment_intent_id': payment_intent_id})
+                item = response.get('Item')
+                if item and item.get('payment_status') == 'completed':
+                    print("Database status updated to 'completed'!")
+                    return True
+            except Exception as e:
+                print(f"Error checking database status: {e}")
+        
+        if attempt < max_attempts - 1:
+            print(f"   Stripe status: {payment_status or 'checking...'} - Retrying in 2 seconds... ({attempt + 1}/{max_attempts})")
+            time.sleep(2)
+    
+    print("Payment was not completed within timeout")
+    return False
+
+def cleanup(payment_intent_id):
+    try:
+        payments_table.delete_item(Key={'payment_intent_id': payment_intent_id})
+        print(f"Cleaned up test payment record: {payment_intent_id}")
+    except:
+        pass
+
+
+# Note: /health endpoint is already defined above, no duplicate needed
+
+@app.post("/webhook/stripe")
+async def stripe_webhook(request: Request):
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature")
+    
+    logger.info(f"Webhook secret length: {len(STRIPE_WEBHOOK_SECRET)}")
+    logger.info(f"Webhook secret: {STRIPE_WEBHOOK_SECRET[:15]}...")
+    
+    if not STRIPE_WEBHOOK_SECRET:
+        logger.error("STRIPE_WEBHOOK_SECRET not configured")
+        raise HTTPException(status_code=500, detail="Webhook secret not configured")
+    
+    try:
+        if len(STRIPE_WEBHOOK_SECRET) < 20 or not sig_header:
+            logger.warning("Using webhook without signature verification (local testing)")
+            event = json.loads(payload.decode('utf-8'))
+        else:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, STRIPE_WEBHOOK_SECRET
+            )
+    except ValueError as e:
+        logger.error(f"Invalid payload: {e}")
+        raise HTTPException(status_code=400, detail="Invalid payload")
+    except Exception as e:
+        if 'signature' in str(e).lower():
+            logger.error(f"Invalid signature: {e}")
+            raise HTTPException(status_code=400, detail="Invalid signature")
+        logger.error(f"Webhook error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    
+    event_type = event["type"]
+    event_data = event["data"]["object"]
+    
+    logger.info(f"Received Stripe event: {event_type}")
+    
+    if event_type == "checkout.session.completed":
+        await handle_payment_success(event_data)
+    elif event_type == "checkout.session.expired":
+        await handle_payment_expired(event_data)
+    elif event_type == "payment_intent.payment_failed":
+        await handle_payment_failed(event_data)
+    else:
+        logger.info(f"Unhandled event type: {event_type}")
+    
+    return JSONResponse({"status": "success", "event_type": event_type})
+
+async def handle_payment_success(session_data: Dict[str, Any]):
+    session_id = session_data.get("id")
+    client_reference_id = session_data.get("client_reference_id")
+    payment_intent_id = session_data.get("payment_intent")
+    
+    logger.info(f"Payment successful for session: {session_id}")
+    
+    if not client_reference_id:
+        logger.warning(f"No client_reference_id found for session {session_id}")
+        return
+    
+    try:
+        response = payments_table.get_item(Key={"payment_intent_id": client_reference_id})
+        payment_record = response.get("Item")
+        
+        if not payment_record:
+            logger.warning(f"Payment record not found for payment_intent_id: {client_reference_id}")
+            return
+        
+        payment_record["payment_status"] = "completed"
+        payment_record["stripe_payment_intent"] = payment_intent_id
+        payment_record["updated_at"] = datetime.utcnow().isoformat()
+        payment_record["webhook_processed_at"] = datetime.utcnow().isoformat()
+        
+        payments_table.put_item(Item=payment_record)
+        
+        logger.info(f"Updated payment status to completed for {client_reference_id}")
+        
+    except Exception as e:
+        logger.error(f"Failed to update payment record: {e}")
+
+async def handle_payment_expired(session_data: Dict[str, Any]):
+    session_id = session_data.get("id")
+    client_reference_id = session_data.get("client_reference_id")
+    
+    logger.info(f"Payment session expired: {session_id}")
+    
+    if not client_reference_id:
+        logger.warning(f"No client_reference_id found for expired session {session_id}")
+        return
+    
+    try:
+        response = payments_table.get_item(Key={"payment_intent_id": client_reference_id})
+        payment_record = response.get("Item")
+        
+        if not payment_record:
+            logger.warning(f"Payment record not found for payment_intent_id: {client_reference_id}")
+            return
+        
+        payment_record["payment_status"] = "expired"
+        payment_record["updated_at"] = datetime.utcnow().isoformat()
+        payment_record["webhook_processed_at"] = datetime.utcnow().isoformat()
+        
+        payments_table.put_item(Item=payment_record)
+        
+        logger.info(f"Updated payment status to expired for {client_reference_id}")
+        
+    except Exception as e:
+        logger.error(f"Failed to update expired payment record: {e}")
+
+async def handle_payment_failed(payment_intent_data: Dict[str, Any]):
+    payment_intent_id = payment_intent_data.get("id")
+    
+    logger.info(f"Payment failed for intent: {payment_intent_id}")
+    
+    try:
+        response = payments_table.scan(
+            FilterExpression="stripe_payment_intent = :intent_id",
+            ExpressionAttributeValues={":intent_id": payment_intent_id}
+        )
+        
+        items = response.get("Items", [])
+        if not items:
+            logger.warning(f"Payment record not found for intent: {payment_intent_id}")
+            return
+        
+        payment_record = items[0]
+        payment_record["payment_status"] = "failed"
+        payment_record["updated_at"] = datetime.utcnow().isoformat()
+        payment_record["webhook_processed_at"] = datetime.utcnow().isoformat()
+        
+        payments_table.put_item(Item=payment_record)
+        
+        logger.info(f"Updated payment status to failed for {payment_record['payment_intent_id']}")
+        
+    except Exception as e:
+        logger.error(f"Failed to update failed payment record: {e}")
