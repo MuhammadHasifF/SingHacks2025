@@ -9,14 +9,48 @@ import requests
 def render_payment_page(api_base: str):
     """Render the payment checkout page."""
     
-    # Get payment info from session state
-    payment_intent_id = st.session_state.get("current_payment_intent")
+    # Get payment info from session state or query params
+    payment_intent_id = st.session_state.get("current_payment_intent") or st.query_params.get("payment_intent")
     checkout_url = st.session_state.get("checkout_url")
     product_name = st.session_state.get("payment_product_name", "Travel Insurance Policy")
     amount_cents = st.session_state.get("payment_amount", 0)
     
+    # If amount is 0 or missing, or product name is default, try to get from saved trip data
+    if amount_cents == 0 or amount_cents is None or product_name == "Travel Insurance Policy":
+        sid = st.session_state.get("session_id", "default")
+        try:
+            from pathlib import Path
+            import json
+            sess_dir = Path(".sessions")
+            trip_file = sess_dir / f"{sid}.trip.json"
+            if trip_file.exists():
+                trip_data = json.loads(trip_file.read_text(encoding="utf-8"))
+                quotes = trip_data.get("quotes", [])
+                recommended = trip_data.get("recommended_plan", "")
+                
+                # Update product name if we have a recommended plan
+                if recommended and product_name == "Travel Insurance Policy":
+                    product_name = recommended
+                    st.session_state["payment_product_name"] = product_name
+                
+                # Update amount if missing
+                if quotes and recommended and (amount_cents == 0 or amount_cents is None):
+                    recommended_quote = next((q for q in quotes if q["plan"] == recommended), None)
+                    if recommended_quote:
+                        price_str = recommended_quote.get("price", "—")
+                        import re
+                        price_clean = re.sub(r'[^\d.]', '', str(price_str))
+                        try:
+                            amount_cents = int(float(price_clean) * 100)
+                            # Update session state for next time
+                            st.session_state["payment_amount"] = amount_cents
+                        except (ValueError, TypeError):
+                            pass
+        except Exception:
+            pass
+    
     # Calculate amount in dollars for display
-    amount_dollars = amount_cents / 100.0
+    amount_dollars = (amount_cents / 100.0) if amount_cents and amount_cents > 0 else 0.0
     
     st.markdown(
         """
@@ -37,10 +71,16 @@ def render_payment_page(api_base: str):
         
         with col1:
             st.markdown(f"**Product:** {product_name}")
-            st.markdown(f"**Payment Intent ID:** `{payment_intent_id}`")
+            if payment_intent_id:
+                st.markdown(f"**Payment Intent ID:** `{payment_intent_id}`")
+            else:
+                st.markdown("**Payment Intent ID:** `None`")
         
         with col2:
-            st.markdown(f"**Amount:** ${amount_dollars:,.2f} SGD")
+            if amount_dollars > 0:
+                st.markdown(f"**Amount:** ${amount_dollars:,.2f} SGD")
+            else:
+                st.warning("**Amount:** Not available - please return to quotes and try again")
     
     st.divider()
     
@@ -51,17 +91,7 @@ def render_payment_page(api_base: str):
         
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
-            st.markdown(
-                f'<a href="{checkout_url}" target="_self">'
-                '<button style="background-color: #E4002B; color: white; padding: 15px 40px; '
-                'border: none; border-radius: 12px; cursor: pointer; width: 100%; '
-                'font-size: 18px; font-weight: bold; box-shadow: 0 6px 14px rgba(228,0,43,.3);">'
-                '🔒 Complete Payment Securely →'
-                '</button></a>',
-                unsafe_allow_html=True
-            )
-            
-            # Alternative: Use Streamlit link button
+            # Use only Streamlit link button (removed duplicate HTML button)
             st.link_button(
                 "🔒 Complete Payment Securely →",
                 checkout_url,
