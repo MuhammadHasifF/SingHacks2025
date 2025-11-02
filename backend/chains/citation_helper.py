@@ -12,9 +12,15 @@ PDF_BASE_PATH = "data/Policy_Wordings"
 
 # Mapping: internal policy name → actual file path
 PDF_LINKS = {
-    "TravelEasy Policy QTD032212": os.path.join(PDF_BASE_PATH, "TravelEasy Policy QTD032212.pdf"),
-    "TravelEasy Pre-Ex Policy QTD032212-PX": os.path.join(PDF_BASE_PATH, "TravelEasy Pre-Ex Policy QTD032212-PX.pdf"),
-    "Scootsurance QSR022206": os.path.join(PDF_BASE_PATH, "Scootsurance QSR022206_updated.pdf"),
+    "TravelEasy Policy QTD032212": os.path.join(
+        PDF_BASE_PATH, "TravelEasy Policy QTD032212.pdf"
+    ),
+    "TravelEasy Pre-Ex Policy QTD032212-PX": os.path.join(
+        PDF_BASE_PATH, "TravelEasy Pre-Ex Policy QTD032212-PX.pdf"
+    ),
+    "Scootsurance QSR022206": os.path.join(
+        PDF_BASE_PATH, "Scootsurance QSR022206_updated.pdf"
+    ),
 }
 
 
