@@ -2,7 +2,7 @@
 streamlit>=1.51.0
 fastapi>=0.117.0
 uvicorn[standard]>=0.30.0
-python-multipart
+python-multipart>=0.0.20
 
 # AI & LLM
 langchain-groq>=1.0.0
@@ -33,3 +33,4 @@ python-dotenv>=1.1.0
 stripe>=8.0.0
 boto3>=1.35.0
 dyanamodb
+
