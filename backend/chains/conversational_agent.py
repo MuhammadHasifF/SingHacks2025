@@ -13,7 +13,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.chat_history import InMemoryChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
-# 🧠 Import Hasif Logic Modules
+# 🧠 Import Internal Logic Modules
 from backend.chains.question_handler import handle_question
 from backend.chains.citation_helper import add_citation
 
@@ -23,16 +23,16 @@ load_dotenv()
 def create_insurance_agent():
     """Creates a psychologically adaptive, sales-aware travel insurance chatbot."""
 
-    # 1️⃣ Initialize Groq LLM (LangChain)
+    # 1️⃣  Initialize Groq LLM (LangChain)
     llm = ChatGroq(
         model="llama-3.3-70b-versatile",
         temperature=0.5,
         groq_api_key=os.getenv("GROQ_API_KEY"),
     )
 
-    # 2️⃣ Define adaptive sales + psychology prompt
+    # 2️⃣  Define AI behaviour and personality
     system_prompt = (
-        "You are **Insurance Scammer**, an MSIG x Scootsurance insurance advisor. "
+        "You are **MSIG Travel Assistant**, an insurance advisor providing MSIG's travel insurance products. "
         "You only know these policy documents:\n"
         "- TravelEasy Policy QTD032212\n"
         "- TravelEasy Pre-Ex Policy QTD032212-PX\n"
@@ -51,16 +51,18 @@ def create_insurance_agent():
         "End every answer by offering a next helpful step (e.g., 'Would you like to compare plans side by side?')."
     )
 
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", system_prompt),
-        MessagesPlaceholder(variable_name="history"),
-        ("human", "{question}")
-    ])
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", system_prompt),
+            MessagesPlaceholder(variable_name="history"),
+            ("human", "{question}"),
+        ]
+    )
 
-    # 3️⃣ Chain construction (LLM + output parser)
+    # 3️⃣  Chain construction (LLM + output parser)
     chain = prompt | llm | StrOutputParser()
 
-    # 4️⃣ Conversation memory
+    # 4️⃣  Conversation memory
     store: dict[str, InMemoryChatMessageHistory] = {}
 
     def _get_history(session_id: str) -> InMemoryChatMessageHistory:
@@ -75,7 +77,7 @@ def create_insurance_agent():
         history_messages_key="history",
     )
 
-    # 5️⃣ Main conversational method
+    # 5️⃣  Main conversational method
     def ask(session_id: str, question: str) -> str:
         """
         Handles:
@@ -89,19 +91,28 @@ def create_insurance_agent():
         q_lower = question.lower()
 
         # Behaviour/tone classification
-        if any(k in q_lower for k in ["not sure", "don’t know", "maybe", "which", "help me decide"]):
+        if any(
+            k in q_lower
+            for k in ["not sure", "don’t know", "maybe", "which", "help me decide"]
+        ):
             user_state = "unsure"
         elif any(k in q_lower for k in ["confused", "don’t understand", "complicated"]):
             user_state = "confused"
-        elif any(k in q_lower for k in ["angry", "frustrated", "unfair", "why", "hate"]):
+        elif any(
+            k in q_lower for k in ["angry", "frustrated", "unfair", "why", "hate"]
+        ):
             user_state = "frustrated"
-        elif any(k in q_lower for k in ["quick", "asap", "urgent", "flight soon", "leaving"]):
+        elif any(
+            k in q_lower for k in ["quick", "asap", "urgent", "flight soon", "leaving"]
+        ):
             user_state = "urgent"
         elif any(k in q_lower for k in ["ready", "buy", "decide", "i’ll choose"]):
             user_state = "ready"
         elif any(k in q_lower for k in ["what if", "explore", "browsing", "curious"]):
             user_state = "exploratory"
-        elif any(k in q_lower for k in ["worried", "concerned", "risk", "pre-existing"]):
+        elif any(
+            k in q_lower for k in ["worried", "concerned", "risk", "pre-existing"]
+        ):
             user_state = "cautious"
         else:
             user_state = "neutral"
