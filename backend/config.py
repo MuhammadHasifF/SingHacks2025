@@ -14,6 +14,9 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 APP_ENV = os.getenv("APP_ENV", "local")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "./data/chroma_db")
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+AWS_REGION = os.getenv("AWS_REGION")
+DYNAMODB_PAYMENTS_TABLE = os.getenv("DYNAMODB_PAYMENTS_TABLE")
 
 # === Validation ===
 if not GROQ_API_KEY:

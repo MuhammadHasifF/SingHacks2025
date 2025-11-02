@@ -6,6 +6,7 @@ import base64
 import io
 from pathlib import Path
 from components.upload_panel import render_upload_panel
+from components.payment_widget import render_payment_page
 
 # ===========================
 # Config
@@ -239,6 +240,33 @@ if not sid:
 st.session_state.session_id = sid
 if "messages" not in st.session_state:
   st.session_state.messages = load_messages(st.session_state.session_id)
+
+# ===========================
+# Handle payment success/cancel redirects
+# ===========================
+if params.get("payment_success") == "true":
+    st.success("🎉 Payment completed successfully! Your insurance policy is now active.")
+    st.balloons()
+    st.session_state["payment_confirmed"] = True
+    # Clean up query params
+    clean_params = dict(st.query_params)
+    clean_params.pop("payment_success", None)
+    clean_params.pop("session_id", None)  # Stripe session ID
+    st.query_params = clean_params
+
+if params.get("payment_cancelled") == "true":
+    st.warning("⚠️ Payment was cancelled. You can try again when ready.")
+    clean_params = dict(st.query_params)
+    clean_params.pop("payment_cancelled", None)
+    st.query_params = clean_params
+
+# ===========================
+# Route to payment page if requested
+# ===========================
+current_page = params.get("page", "main")
+if current_page == "payment":
+  render_payment_page(API_BASE)
+  st.stop()  # Don't render the main chat interface
 
 # ===========================
 # Sidebar — Upload Panel

@@ -332,4 +332,109 @@ def render_upload_panel(api_base: str):
         st.divider()
         _render_trip_summary(saved["trip"])
         _render_quotes(saved.get("quotes", []), saved.get("recommended_plan", ""))
+        
+        # Payment functionality
+        quotes = saved.get("quotes", [])
+        recommended = saved.get("recommended_plan", "")
+        
+        # Show payment success message if payment was confirmed
+        if st.session_state.get("payment_confirmed"):
+            st.success("🎉 Payment confirmed successfully! Your insurance policy is now active.")
+            st.balloons()
+            st.session_state.payment_confirmed = False
+        
+        # Proceed to Payment button
+        if st.button("Proceed to Payment ➜", use_container_width=True, type="primary", key="proceed_payment"):
+            recommended_quote = next((q for q in quotes if q["plan"] == recommended), None)
+            if recommended_quote:
+                price_str = recommended_quote.get("price", "—")
+                
+                # Parse price from "$42.50" to cents (4250)
+                import re
+                price_clean = re.sub(r'[^\d.]', '', str(price_str))
+                try:
+                    amount_cents = int(float(price_clean) * 100)
+                except (ValueError, TypeError):
+                    st.error(f"Invalid price format: {price_str}")
+                    return
+                
+                # Get session ID
+                session_id = st.session_state.get("session_id", "default")
+                
+                # Call /payment-intent API
+                try:
+                    response = requests.post(
+                        f"{api_base}/payment-intent",
+                        json={
+                            "session_user_id": session_id,
+                            "product_name": recommended,
+                            "purchase_amount": amount_cents
+                        },
+                        timeout=30
+                    )
+                    
+                    if response.status_code == 200:
+                        result = response.json()
+                        payment_intent_id = result.get("payment_intent_id")
+                        
+                        # Call /stripe-checkout POST API
+                        try:
+                            checkout_response = requests.post(
+                                f"{api_base}/stripe-checkout",
+                                json={
+                                    "payment_intent_id": payment_intent_id,
+                                    "product_name": recommended,
+                                    "purchase_amount": amount_cents
+                                },
+                                timeout=30
+                            )
+                            
+                            if checkout_response.status_code == 200:
+                                checkout_result = checkout_response.json()
+                                checkout_url = checkout_result.get("url") or checkout_result.get("checkout_url")
+                                
+                                if checkout_url:
+                                    # Store payment info in session state for payment page
+                                    st.session_state["current_payment_intent"] = payment_intent_id
+                                    st.session_state["checkout_url"] = checkout_url
+                                    st.session_state["payment_product_name"] = recommended
+                                    st.session_state["payment_amount"] = amount_cents
+                                    st.session_state["payment_status"] = "ready"
+                                    
+                                    # Navigate to payment page using query params
+                                    st.query_params = {
+                                        **st.query_params,
+                                        "page": "payment",
+                                        "payment_intent": payment_intent_id
+                                    }
+                                    st.rerun()
+                                else:
+                                    st.warning("⚠️ Checkout URL not found in response.")
+                                    st.json(checkout_result)  # Show response for debugging
+                            else:
+                                error_detail = "Unknown error"
+                                try:
+                                    error_data = checkout_response.json()
+                                    error_detail = error_data.get("detail", error_data.get("error", checkout_response.text))
+                                except:
+                                    error_detail = checkout_response.text
+                                
+                                st.error(f"❌ Stripe checkout creation failed: {checkout_response.status_code}")
+                                st.error(f"Error details: {error_detail}")
+                        except Exception as checkout_error:
+                            st.error(f"❌ Error creating Stripe checkout: {checkout_error}")
+                            import traceback
+                            st.code(traceback.format_exc())
+                    else:
+                        error_detail = "Unknown error"
+                        try:
+                            error_data = response.json()
+                            error_detail = error_data.get("detail", error_data.get("error", response.text))
+                        except:
+                            error_detail = response.text
+                        
+                        st.error(f"❌ Payment intent creation failed: {response.status_code}")
+                        st.error(f"Error details: {error_detail}")
+                except Exception as e:
+                    st.error(f"❌ Error calling payment API: {e}")
 
