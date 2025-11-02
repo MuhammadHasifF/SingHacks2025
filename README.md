@@ -385,6 +385,10 @@ Open your browser to **http://localhost:8501** to use the app.
 
 #### Option 2: Docker (Production-like)
 
+Install Docker Desktop at https://www.docker.com
+
+Write Dockerfile in your application's root directory
+
 ```bash
 # Build Docker image
 docker build -t msig-assistant .
@@ -764,5 +768,6 @@ For questions, issues, or contributions:
 ---
 
 **Built for SingHacks 2025**
+
 
 
