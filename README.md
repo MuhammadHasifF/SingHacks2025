@@ -87,8 +87,7 @@ SingHacks2025/
 │
 ├── README.md                       # This file
 ├── requirements.txt                # Python dependencies
-├── .gitignore                      # Git ignore rules
-├── .env.example                    # Environment variables template
+├── temp_audio.wav                  # Temporary audio file (if used)
 │
 ├── app/                            # Streamlit Frontend
 │   ├── main.py                     # Main Streamlit app entry point
@@ -97,18 +96,19 @@ SingHacks2025/
 │   │                               # - Message persistence
 │   │
 │   ├── components/
-│   │   └── upload_panel.py         # Sidebar upload component
-│   │                               # - File upload (itinerary/ticket/policy)
-│   │                               # - Document extraction UI
-│   │                               # - Quote generation display
+│   │   ├── upload_panel.py         # Sidebar upload component
+│   │   │                           # - File upload (itinerary/ticket/policy)
+│   │   │                           # - Document extraction UI
+│   │   │                           # - Quote generation display
+│   │   │
+│   │   └── payment_widget.py       # Payment processing widget
+│   │                               # - Payment UI components
+│   │                               # - Payment integration
 │   │
-│   ├── styles/
-│   │   └── (empty - styles in main.py)
+│   ├── static/                     # Static assets
+│   │   └── (static files if any)
 │   │
-│   ├── utils/
-│   │   └── (empty - utilities in main.py)
-│   │
-│   └── msig_theme.css              # Additional MSIG styling (if needed)
+│   └── msig_theme.css              # Additional MSIG styling
 │
 ├── backend/                        # Core Backend Logic
 │   ├── api.py                      # FastAPI application
@@ -179,6 +179,7 @@ SingHacks2025/
 │   │   ├── taxonomy_mapper.py      # Taxonomy schema builder
 │   │   │                           # - Loads taxonomy JSON schema
 │   │   │                           # - Builds extraction prompts
+│   │   │                           # - Maps documents to taxonomy structure
 │   │   │
 │   │   ├── process_all_policies.py # Batch policy processor
 │   │   │                           # - Processes all PDFs in Policy_Wordings
@@ -189,12 +190,6 @@ SingHacks2025/
 │   │                               # - Combines individual policy JSONs
 │   │                               # - Maps to unified taxonomy structure
 │   │                               # - Generates combined_taxonomy_policies.json
-│   │
-│   ├── index/                      # Vector Indexing (for future RAG)
-│   │   └── (empty - ChromaDB integration pending)
-│   │
-│   ├── storage/                    # Data Storage
-│   │   └── (empty - using JSON files directly)
 │   │
 │   └── utils/                      # Utility Functions
 │       ├── policy_extractor.py     # Document information extraction
@@ -221,37 +216,32 @@ SingHacks2025/
 │   ├── samples/                    # Sample processed JSONs
 │   │   ├── TravelEasy Policy QTD032212.json
 │   │   ├── TravelEasy Pre-Ex Policy QTD032212-PX.json
-│   │   └── Scootsurance QSR022206.json
+│   │   ├── Scootsurance QSR022206.json
+│   │   └── Scootsurance QSR022206_updated.json
 │   │
 │   ├── processed/                  # Processed/combined data
 │   │   └── combined_taxonomy_policies.json  # Unified policy taxonomy
 │   │
-│   ├── uploads/                    # User-uploaded documents (gitignored)
-│   │   └── (user files stored here)
-│   │
-│   └── chroma_db/                  # ChromaDB vector store (gitignored)
-│       └── (vector embeddings if using RAG)
-│
-├── tests/                          # Test Suite
-│   ├── test_cli_chat.py            # CLI chat interface tester
-│   ├── test_conversation.py        # Conversation flow tests
-│   └── test_policy_functions.py    # Policy comparison/explanation tests
-│
-├── deployment/                     # Deployment Configs
-│   └── (empty - deployment configs removed)
+│   └── uploads/                    # User-uploaded documents (gitignored)
+│       └── (user files stored here)
 │
 ├── storage/                        # Runtime Storage (gitignored)
 │   └── history/                    # User session history
 │       └── (JSON session files)
 │
-└── .sessions/                      # Streamlit Sessions (gitignored)
-    └── (user session JSON files)
+└── tests/                          # Test Suite
+    ├── test_cli_chat.py            # CLI chat interface tester
+    ├── test_conversation.py        # Conversation flow tests
+    ├── test_payment.py             # Payment functionality tests
+    └── test_policy_functions.py    # Policy comparison/explanation tests
 ```
 
 ### Key File Descriptions
 
 #### Frontend (`app/`)
 - **`main.py`**: Entry point for Streamlit app. Handles chat UI, session management, message persistence, and MSIG-themed styling.
+- **`components/upload_panel.py`**: Sidebar component for file uploads and document extraction UI.
+- **`components/payment_widget.py`**: Payment processing widget for handling payment integrations.
 
 #### Backend Core (`backend/`)
 - **`api.py`**: FastAPI server with chat, upload, extraction, and quote generation endpoints.
@@ -282,9 +272,10 @@ Before you begin, ensure you have the following installed:
 - **pip** (Python package manager)
 - **Git** (for cloning the repository)
 - **Groq API Key** ([Get one here](https://console.groq.com/))
+- **Docker** ([Download Docker](https://www.docker.com/products/docker-desktop/)) - Required for payments system
+- **Stripe Account** ([Sign up here](https://dashboard.stripe.com/register)) - Required for payment processing
 
 ### Optional (for deployment):
-- **Docker** (for containerized deployment)
 - **Railway account** (for cloud deployment)
 
 ---
@@ -298,7 +289,77 @@ git clone https://github.com/your-username/SingHacks2025.git
 cd SingHacks2025
 ```
 
-### 2. Create Virtual Environment
+### 2. Set Up Payment System (Required for Payment Features)
+
+The payment system requires a separate repository that contains the database setup files. Follow these steps:
+
+#### 2.1. Clone the Payments Repository
+
+```bash
+git clone https://github.com/MuhammadHasifF/ancileo-msig-Fork-for-Payments.git
+cd ancileo-msig-Fork-for-Payments
+cd Payments
+```
+
+#### 2.2. Set Up Docker
+
+1. **Download Docker**: Install Docker Desktop from [https://www.docker.com/products/docker-desktop/](https://www.docker.com/products/docker-desktop/)
+2. **Sign up/Login**: Create a Docker account or sign in to your existing account
+3. **Start Docker**: Ensure Docker Desktop is running on your machine
+
+#### 2.3. Get Stripe API Keys
+
+1. Go to [Stripe Dashboard](https://dashboard.stripe.com/)
+2. Navigate to **Developers > API keys**
+3. Copy your **Secret key** (starts with `sk_test_` for test mode or `sk_live_` for production)
+4. For webhook verification (optional but recommended):
+   - Go to **Developers > Webhooks** in Stripe Dashboard
+   - Create or select your webhook endpoint
+   - Copy the **Signing secret** (starts with `whsec_`)
+5. You'll add these to your `.env` file in the main repository (see step 5 below)
+
+#### 2.4. Start Docker Services
+
+From the `Payments` directory, run:
+
+```bash
+docker-compose up -d
+```
+
+This will start the required services:
+- **Stripe webhook server** (port 8086)
+- **Payment pages server** (port 8085)
+- **DynamoDB** (database)
+- **DynamoDB Admin UI** (port 8010)
+
+#### 2.5. Verify Payment Services Are Running
+
+Check that all services are healthy:
+
+```bash
+# Check Stripe webhook health
+curl http://localhost:8086/health
+
+# Check Payment pages health
+curl http://localhost:8085/health
+
+# Open DynamoDB Admin UI in your browser
+# http://localhost:8010
+```
+
+If all services respond successfully, the payment system is ready!
+
+**Note**: Keep Docker running while using the application. The payment services must remain active for payment processing to work.
+
+### 3. Return to Main Repository and Create Virtual Environment
+
+Navigate back to the main repository:
+
+```bash
+cd ../../SingHacks2025
+```
+
+Create a virtual environment:
 
 ```bash
 # Windows
@@ -310,13 +371,13 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-### 3. Install Dependencies
+### 4. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment Variables
+### 5. Configure Environment Variables
 
 Create a `.env` file in the root directory:
 
@@ -331,6 +392,14 @@ Or create `.env` manually with the following content:
 # Required: Groq API Key
 GROQ_API_KEY=your_groq_api_key_here
 
+# Required: Stripe Configuration (for payment features)
+STRIPE_SECRET_KEY=your_stripe_secret_key_here
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret_here
+AWS_REGION=ap-southeast-1
+DYNAMODB_PAYMENTS_TABLE=lea-payments-local
+# DynamoDB endpoint - configure based on your Docker setup (check the Payments repo)
+DDB_ENDPOINT=http://localhost:8000
+
 # Optional: App Configuration
 APP_ENV=local
 LOG_LEVEL=INFO
@@ -340,9 +409,11 @@ CHROMA_PERSIST_DIR=./data/chroma_db
 TAVILY_API_KEY=your_tavily_key_here
 ```
 
-**Important**: Replace `your_groq_api_key_here` with your actual Groq API key from [Groq Console](https://console.groq.com/).
+**Important**: 
+- Replace `your_groq_api_key_here` with your actual Groq API key from [Groq Console](https://console.groq.com/)
+- Replace `your_stripe_secret_key_here` with your Stripe secret key from [Stripe Dashboard](https://dashboard.stripe.com/apikeys) (the one you copied in step 2.3)
 
-### 5. Verify Setup
+### 6. Verify Setup
 
 Test that the backend can start:
 
@@ -604,6 +675,9 @@ pytest tests/test_conversation.py -v
 # Test policy functions
 pytest tests/test_policy_functions.py -v
 
+# Test payment functionality
+pytest tests/test_payment.py -v
+
 # Test CLI chat interface
 python tests/test_cli_chat.py
 ```
@@ -673,10 +747,17 @@ docker run -p 8501:8501 -p 8000:8000 --env-file .env msig-assistant
 | Variable | Required | Description | Default |
 |----------|----------|-------------|---------|
 | `GROQ_API_KEY` | Yes | Groq API key for LLM access | - |
+| `STRIPE_SECRET_KEY` | Yes* | Stripe secret key for payment processing | - |
+| `STRIPE_WEBHOOK_SECRET` | No* | Stripe webhook secret for webhook verification | - |
+| `AWS_REGION` | No* | AWS region for DynamoDB | `ap-southeast-1` |
+| `DYNAMODB_PAYMENTS_TABLE` | No* | DynamoDB table name for payment records | `lea-payments-local` |
+| `DDB_ENDPOINT` | No* | DynamoDB endpoint URL (for local Docker setup) | - |
 | `APP_ENV` | No | Environment (local/production) | `local` |
 | `LOG_LEVEL` | No | Logging level | `INFO` |
 | `CHROMA_PERSIST_DIR` | No | ChromaDB storage path | `./data/chroma_db` |
 | `TAVILY_API_KEY` | No | Tavily API key (optional) | - |
+
+*Required only if using payment features. If you're not using payments, these can be omitted.
 
 ---
 
@@ -709,6 +790,28 @@ docker run -p 8501:8501 -p 8000:8000 --env-file .env msig-assistant
 5. **Session Not Persisting**
    - Check `.sessions/` directory exists and is writable
    - Verify file permissions on the directory
+
+6. **Payment Services Not Working**
+   - Ensure Docker is running: Check Docker Desktop status
+   - Verify payment services are up:
+     ```bash
+     curl http://localhost:8086/health  # Stripe webhook
+     curl http://localhost:8085/health  # Payment pages
+     ```
+   - If services are down, restart them:
+     ```bash
+     cd ancileo-msig-Fork-for-Payments/Payments
+     docker-compose down
+     docker-compose up -d
+     ```
+   - Check that `STRIPE_SECRET_KEY` is set in your `.env` file
+   - Ensure the Stripe secret key starts with `sk_test_` (test mode) or `sk_live_` (production)
+
+7. **DynamoDB Connection Issues**
+   - Verify Docker containers are running: `docker ps`
+   - Check DynamoDB Admin UI: Open http://localhost:8010
+   - Ensure `AWS_REGION` and `DYNAMODB_PAYMENTS_TABLE` are set in `.env`
+   - Restart Docker services if needed
 
 ---
 

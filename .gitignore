@@ -3,6 +3,7 @@
 .env
 .venv/
 .env.*
+!.env.example
 data/chroma_db/
 data/uploads/
 logs/*.log
